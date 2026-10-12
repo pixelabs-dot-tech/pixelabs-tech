@@ -4,6 +4,7 @@
  *
  *   GET  ?a=top[&n=10]  -> best scores
  *   GET  ?a=start       -> signed run token (issued when a run starts)
+ *   GET  ?a=check&name= -> whether a name is allowed (nothing is saved)
  *   POST ?a=submit      -> body: JSON {name, score, coins, rare, villages, village, time, token}
  *
  * Data lives outside the web root. Nothing secret is stored in this repository:
@@ -166,55 +167,97 @@ function name_key(string $name): string
     return (string) preg_replace('/[^\p{L}\p{N}]+/u', '', (string) $s);
 }
 
+/* Names are folded before checking: lower case, accents removed, Arabic letters
+   unified (أ إ آ -> ا, ة -> ه, ى -> ي) and harakat dropped. Each list is checked
+   against the name as typed, with repeated letters collapsed ("ayyyre"), with
+   spaces removed ("a y r e"), with trailing numbers dropped ("ayre123") and with
+   numbers read as letters ("4yre"). The lists are in names.json, which the game
+   page also uses, so both sides refuse the same names. */
+function name_lists(): ?array
+{
+    static $L = false;
+    if ($L !== false) {
+        return $L;
+    }
+    $j = json_decode((string) @file_get_contents(__DIR__ . '/names.json'), true);
+    if (!is_array($j) || !isset($j['anywhere'], $j['starts'], $j['words'])) {
+        $L = null;
+        return $L;
+    }
+    $single = function ($w) { return name_dedup((string) $w) === (string) $w; };   // still valid once repeats collapse
+    $L = array(
+        'any' => $j['anywhere'], 'anyD' => array_values(array_filter($j['anywhere'], $single)),
+        'start' => $j['starts'], 'startD' => array_values(array_filter($j['starts'], $single)),
+        'word' => array_flip($j['words']), 'wordD' => array_flip(array_values(array_filter($j['words'], $single))),
+    );
+    return $L;
+}
+
+function name_fold(string $s): string
+{
+    if (class_exists('Normalizer')) {
+        $t = Normalizer::normalize($s, Normalizer::FORM_KD);
+        if (is_string($t)) {
+            $s = $t;
+        }
+    }
+    $s = mb_strtolower($s, 'UTF-8');
+    $s = (string) preg_replace('/[\x{0300}-\x{036F}\x{064B}-\x{065F}\x{0670}\x{0640}\x{200B}-\x{200F}]/u', '', $s);
+    return strtr($s, array(
+        'أ' => 'ا', 'إ' => 'ا', 'آ' => 'ا', 'ٱ' => 'ا', 'ة' => 'ه', 'ى' => 'ي', 'ؤ' => 'و', 'ئ' => 'ي',
+        // in case the intl extension is missing
+        'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'ā' => 'a', 'ç' => 'c', 'è' => 'e', 'é' => 'e',
+        'ê' => 'e', 'ë' => 'e', 'ē' => 'e', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ñ' => 'n', 'ò' => 'o', 'ó' => 'o',
+        'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'ÿ' => 'y',
+        'š' => 's', 'ž' => 'z', 'ğ' => 'g', 'ı' => 'i', 'ł' => 'l'
+    ));
+}
+
+function name_dedup(string $s): string
+{
+    return (string) preg_replace('/(.)\1+/u', '$1', $s);
+}
+
 function is_rude(string $name): bool
 {
-    $lower = mb_strtolower($name, 'UTF-8');
-    $lower = (string) preg_replace('/[\x{064B}-\x{0652}\x{0640}]/u', '', $lower);
-    $lower = strtr($lower, array('أ' => 'ا', 'إ' => 'ا', 'آ' => 'ا', 'ة' => 'ه', 'ى' => 'ي'));
-    $leet = strtr($lower, array('0' => 'o', '1' => 'i', '3' => 'e', '4' => 'a', '5' => 's', '7' => 't', '@' => 'a', '$' => 's', '!' => 'i', '|' => 'i'));
-    $squash = function (string $s): string {
-        return (string) preg_replace('/[^\p{L}\p{N}]+/u', '', $s);
-    };
-
-    // Anywhere in the name, even glued to other letters.
-    $strong = array(
-        'fuck', 'fck', 'phuck', 'shit', 'cunt', 'nigg', 'fagg', 'faggot', 'bitch', 'biatch', 'whore',
-        'slut', 'pussy', 'asshole', 'arsehole', 'motherf', 'porn', 'penis', 'vagina', 'hitler', 'nazi', 'rapist',
-        'sharmou', 'sharmut', 'charmou', 'sharmoot', 'manyak', 'manyok', 'manyouk', 'mnayak', 'mnayek', 'kessekh', 'kesemm',
-        'كسخت', 'كسام', 'شرموط', 'منيوك', 'منيك', 'عرص', 'متناك', 'قحبه',
-    );
-    foreach (array($squash($lower), $squash($leet)) as $hay) {
-        foreach ($strong as $w) {
-            if ($w !== '' && mb_strpos($hay, $w, 0, 'UTF-8') !== false) {
+    $L = name_lists();
+    if ($L === null) {
+        return true;   // lists missing: refuse rather than let anything through
+    }
+    $raw = name_fold($name);
+    $leet = strtr($raw, array('0' => 'o', '1' => 'i', '3' => 'e', '4' => 'a', '5' => 's', '7' => 't', '8' => 'b', '9' => 'g',
+        '@' => 'a', '$' => 's', '!' => 'i', '|' => 'i', '€' => 'e', '+' => 't'));
+    foreach (array($raw, $leet) as $v) {
+        $squash = (string) preg_replace('/[^\p{L}\p{N}]+/u', '', $v);
+        if ($squash === '') {
+            continue;
+        }
+        $squashD = name_dedup($squash);
+        foreach ($L['any'] as $w) {
+            if (mb_strpos($squash, $w, 0, 'UTF-8') !== false) {
                 return true;
             }
         }
-    }
-
-    // Only as whole words (they appear inside ordinary names and places).
-    $words = array(
-        'ass', 'dick', 'cock', 'rape', 'anal', 'cum', 'sex', 'kkk', 'tits', 'twat', 'wank', 'jerk off',
-        'ayre', 'ayri', 'ayr', 'air ekhtak', 'kos', 'kuss', 'kess', 'kes', 'tiz', 'teez', 'zeb', 'zebb', 'zib', 'khara', 'khra',
-        'neek', '3ars', '3ers', 'ars', 'kahbe', 'ahbe', '2ahbe',
-        'كس', 'زب', 'زبي', 'طيز', 'خرا', 'نيك', 'ايري', 'اير',
-    );
-    $tokens = array();
-    foreach (array($lower, $leet) as $s) {
-        $parts = preg_split('/[^\p{L}\p{N}]+/u', $s, -1, PREG_SPLIT_NO_EMPTY);
-        if (is_array($parts)) {
-            $tokens = array_merge($tokens, $parts);
+        foreach ($L['anyD'] as $w) {
+            if (mb_strpos($squashD, $w, 0, 'UTF-8') !== false) {
+                return true;
+            }
         }
-    }
-    $joined = ' ' . implode(' ', $tokens) . ' ';
-    foreach ($words as $w) {
-        if (mb_strpos($joined, ' ' . $w . ' ', 0, 'UTF-8') !== false) {
-            return true;
-        }
-    }
-    // the Arabizi digits stay digits in the raw form
-    foreach (preg_split('/[^\p{L}\p{N}]+/u', $lower, -1, PREG_SPLIT_NO_EMPTY) ?: array() as $t) {
-        if (in_array($t, array('3ars', '3ers', '2ahbe', '2a7be', 'a7be', 'ka7be', 'n1k'), true)) {
-            return true;
+        $tokens = preg_split('/[^\p{L}\p{N}]+/u', $v, -1, PREG_SPLIT_NO_EMPTY) ?: array();
+        $tokens[] = $squash;                                      // "a y r e" reads as one word
+        foreach ($tokens as $t) {
+            foreach (array(array($t, 'word', 'start'), array(name_dedup($t), 'wordD', 'startD')) as $form) {
+                list($x, $wl, $sl) = $form;
+                $bare = (string) preg_replace('/\d+$/u', '', $x);   // "ayre123" -> "ayre"
+                if (isset($L[$wl][$x]) || ($bare !== '' && isset($L[$wl][$bare]))) {
+                    return true;
+                }
+                foreach ($L[$sl] as $w) {
+                    if (mb_strpos($x, (string) $w, 0, 'UTF-8') === 0) {
+                        return true;
+                    }
+                }
+            }
         }
     }
     return false;
@@ -281,6 +324,11 @@ if ($method === 'GET' && $a === 'top') {
     $n = isset($_GET['n']) ? max(1, min(50, (int) $_GET['n'])) : 10;
     $board = read_json('board.json', array());
     send(200, array('ok' => true, 'top' => board_public($board, $n), 'total' => count($board)));
+}
+
+if ($method === 'GET' && $a === 'check') {
+    $why = valid_name(clean_name(isset($_GET['name']) ? (string) $_GET['name'] : ''));
+    send(200, array('ok' => true, 'allowed' => $why === null, 'error' => $why));
 }
 
 if ($method === 'GET' && $a === 'start') {
