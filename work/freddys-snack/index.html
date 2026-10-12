@@ -1,0 +1,1035 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Freddy's Snack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Lalezar&family=Yellowtail&display=swap">
+<style>
+:root {
+  /* Layout: a snack-bar poster that scrolls. Blue sign panels, a cream paper menu laid on the shop's pink granite counter, food reels pinned up like snapshots. */
+  --blue: #2B33A0;          /* Freddy's sign blue */
+  --blue-deep: #141A5C;     /* ink, outlines, night panels */
+  --orange: #F4A23C;        /* the script on the logo */
+  --tomato: #C4441E;        /* the phone-number badge */
+  --cream: #FFF4E1;         /* paper and type on blue */
+  --granite: #A3806F;       /* the counter */
+  --paper: #FFF9EE;
+  --white: #FFFFFF;
+  --muted: #565A82;
+  --line: rgba(20, 26, 92, .24);
+  --cream-line: rgba(255, 244, 225, .22);
+  --jeetak: #E23C0E;        /* Jeetak's logo orange */
+
+  --font-display: "Bowlby One", "Arial Black", Impact, sans-serif;
+  --font-script: "Yellowtail", "Brush Script MT", "Segoe Script", cursive;
+  --font-body: "Bricolage Grotesque", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-ar-display: "Lalezar", "Segoe UI", Tahoma, sans-serif;
+  --font-ar-body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif;
+
+  --gutter: max(16px, 4.5vw);
+  --maxw: 1200px;
+  --header-h: 62px;
+  --shadow: 0 22px 44px -16px rgba(12, 14, 56, .6);
+  --burst: polygon(50% 0%, 57.1% 9.6%, 67.1% 3%, 70.5% 14.5%, 82.1% 11.7%, 81.4% 23.6%, 93.3% 25%, 88.5% 36%, 99.2% 41.3%, 91% 50%, 99.2% 58.7%, 88.5% 64%, 93.3% 75%, 81.4% 76.4%, 82.1% 88.3%, 70.5% 85.5%, 67.1% 97%, 57.1% 90.4%, 50% 100%, 42.9% 90.4%, 32.9% 97%, 29.5% 85.5%, 17.9% 88.3%, 18.6% 76.4%, 6.7% 75%, 11.5% 64%, .8% 58.7%, 9% 50%, .8% 41.3%, 11.5% 36%, 6.7% 25%, 18.6% 23.6%, 17.9% 11.7%, 29.5% 14.5%, 32.9% 3%, 42.9% 9.6%);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--blue-deep);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+html[lang="ar"] body { font-family: var(--font-ar-body); line-height: 1.75; }
+img, video { display: block; max-width: 100%; }
+img { height: auto; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+button { font: inherit; }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 8px; }
+
+.wrap { width: 100%; max-width: calc(var(--maxw) + 2 * var(--gutter)); margin-inline: auto; padding-inline: var(--gutter); }
+
+.skip {
+  position: absolute; inset-inline-start: 12px; top: -80px; z-index: 100;
+  background: var(--orange); color: var(--blue-deep); font-weight: 700;
+  padding: 10px 16px; border-radius: 999px; text-decoration: none;
+}
+.skip:focus { top: calc(env(safe-area-inset-top, 0px) + 10px); }
+
+/* ---------- type ---------- */
+.display {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 400;
+  text-transform: uppercase; line-height: .9; letter-spacing: -.005em;
+  text-wrap: balance;
+}
+html[lang="ar"] .display { font-family: var(--font-ar-display); text-transform: none; line-height: 1.15; letter-spacing: 0; }
+.kicker { margin: 0; font-family: var(--font-script); font-size: clamp(1.6rem, 2.8vw, 2.1rem); line-height: 1; color: var(--tomato); }
+html[lang="ar"] .kicker { font-family: var(--font-ar-display); font-size: clamp(1.3rem, 2.3vw, 1.65rem); line-height: 1.3; }
+.on-dark .kicker { color: var(--orange); }
+.lede { margin: 0; max-width: 34em; font-size: clamp(1.06rem, 1.5vw, 1.24rem); line-height: 1.5; }
+html[lang="ar"] .lede { line-height: 1.8; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: .55em;
+  min-height: 48px; padding: .7em 1.3em;
+  border: 2.5px solid transparent; border-radius: 999px;
+  font-family: var(--font-body); font-weight: 750; font-size: 1.02rem; line-height: 1.1;
+  text-decoration: none; cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+html[lang="ar"] .btn { font-family: var(--font-ar-body); font-weight: 700; }
+.btn svg { flex: none; }
+.btn-primary { background: var(--orange); color: var(--blue-deep); box-shadow: 0 4px 0 var(--blue-deep); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--blue-deep); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--blue-deep); }
+.btn-ghost { background: transparent; color: var(--cream); border-color: var(--cream); }
+.btn-ghost:hover { background: var(--cream-line); }
+.btn-blue { background: var(--blue); color: var(--cream); box-shadow: 0 4px 0 var(--blue-deep); }
+.btn-blue:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--blue-deep); }
+.btn .arr { transition: transform .15s ease; }
+.btn:hover .arr { transform: translateX(3px); }
+html[dir="rtl"] .btn .arr { transform: scaleX(-1); }
+html[dir="rtl"] .btn:hover .arr { transform: scaleX(-1) translateX(3px); }
+
+/* ---------- header ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  background: var(--blue); color: var(--cream);
+  border-bottom: 3px solid var(--blue-deep);
+}
+.topbar .wrap { display: flex; align-items: center; gap: 12px; height: var(--header-h); }
+.brand { display: flex; align-items: center; gap: 10px; margin-inline-end: auto; text-decoration: none; color: var(--cream); min-width: 0; }
+.brand img { height: 54px; width: auto; margin-top: 14px; rotate: -5deg; filter: drop-shadow(0 4px 0 rgba(10, 12, 50, .35)); }
+.brand span { font-family: var(--font-display); text-transform: uppercase; font-size: 1.02rem; letter-spacing: .01em; white-space: nowrap; }
+.nav { display: none; gap: 26px; margin-inline-end: 10px; }
+.nav a { text-decoration: none; font-weight: 650; padding-block: 6px; border-bottom: 2px solid transparent; }
+.nav a:hover { border-bottom-color: var(--orange); }
+.lang-btn {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  border: 2px solid var(--cream-line); background: transparent; color: var(--cream);
+  font-weight: 700; font-size: .95rem;
+}
+.lang-btn:lang(ar) { font-family: var(--font-ar-body); font-size: 1rem; }
+.lang-btn:lang(en) { font-family: var(--font-body); }
+.lang-btn:hover { border-color: var(--cream); }
+.topbar .btn { min-height: 40px; padding: .45em 1em; font-size: .95rem; box-shadow: 0 3px 0 var(--blue-deep); }
+@media (max-width: 419px) { .brand span { display: none; } }
+@media (min-width: 880px) { .nav { display: flex; } }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative; isolation: isolate; overflow: clip;
+  background: var(--blue); color: var(--cream);
+  padding-block: 72px 112px;
+}
+.bunting {
+  position: absolute; inset: 0 0 auto 0; height: 40px; z-index: 1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Cpath d='M0 3Q60 12 120 3' fill='none' stroke='%23FFF4E1' stroke-opacity='.75' stroke-width='1.6'/%3E%3Cpath d='M8 4.1L44 7.2 26 36z' fill='%23F4A23C'/%3E%3Cpath d='M68 7.4L104 5.1 86 37z' fill='%23FFF4E1'/%3E%3C/svg%3E") repeat-x 0 0 / 120px 40px;
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-image: radial-gradient(rgba(255, 244, 225, .08) 1.3px, transparent 1.9px);
+  background-size: 16px 16px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 20%, transparent 95%);
+          mask-image: linear-gradient(to bottom, #000 20%, transparent 95%);
+}
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; align-items: center; }
+.hero-copy { display: grid; gap: 24px; justify-items: start; min-width: 0; }
+.stamp {
+  display: inline-flex; align-items: center; gap: .5em;
+  border: 2px solid var(--orange); color: var(--orange); border-radius: 999px;
+  padding: .32em .95em; font-weight: 700; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase;
+}
+html[lang="ar"] .stamp { letter-spacing: 0; font-size: .95rem; }
+.hero-title {
+  position: relative;
+  font-size: clamp(2.75rem, 11vw, 5.5rem);
+  color: var(--cream);
+  text-shadow: .055em .055em 0 var(--tomato);
+}
+.hero-title em { font-style: normal; color: var(--orange); }
+html[lang="ar"] .hero-title { font-size: clamp(3.3rem, 13vw, 6.4rem); line-height: 1.1; }
+.hero .lede { color: var(--cream); opacity: .92; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.callline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; font-weight: 650; }
+.phone-badge {
+  font-family: var(--font-display); font-size: 1.28rem; letter-spacing: .04em; line-height: 1;
+  background: var(--tomato); color: var(--cream); text-decoration: none;
+  padding: .32em .6em .28em; border-radius: 6px; direction: ltr; unicode-bidi: isolate;
+  box-shadow: 0 3px 0 var(--blue-deep);
+}
+.copy-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px;
+  border-radius: 999px; border: 2px solid currentColor; background: transparent; color: inherit;
+  font-weight: 700; font-size: .85rem; cursor: pointer; opacity: .9;
+}
+.copy-btn:hover { opacity: 1; }
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 56px; }
+  .hero-title { font-size: clamp(3rem, 6.1vw, 5.5rem); }
+  html[lang="ar"] .hero-title { font-size: clamp(3.4rem, 7vw, 6.4rem); }
+}
+
+/* the fan of snapshots */
+.fan { position: relative; width: min(100%, 520px); aspect-ratio: 1 / 1.04; margin-inline: auto; }
+.rays {
+  position: absolute; inset: -16%; z-index: 0; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 244, 225, .08) 0deg 7.5deg, transparent 7.5deg 15deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent);
+          mask-image: radial-gradient(closest-side, #000 45%, transparent);
+}
+.shot {
+  position: absolute; z-index: 1; width: 46%; aspect-ratio: 4 / 5; margin: 0;
+  border: 5px solid var(--cream); border-radius: 16px; overflow: hidden;
+  background: var(--blue-deep); box-shadow: var(--shadow);
+}
+.shot video { width: 100%; height: 100%; object-fit: cover; }
+.shot-1 { left: 0; top: 17%; rotate: -8deg; }
+.shot-2 { left: 25%; top: 0; width: 50%; z-index: 2; rotate: 1.5deg; }
+.shot-3 { right: 0; top: 21%; rotate: 7deg; }
+.tape {
+  position: absolute; left: 50%; bottom: 12px; translate: -50% 0; rotate: -4deg;
+  background: var(--cream); color: var(--blue-deep);
+  font-family: var(--font-script); font-size: clamp(1rem, 2.6vw, 1.3rem); line-height: 1;
+  padding: .28em .75em .34em; border-radius: 3px; white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(12, 14, 56, .25);
+}
+html[lang="ar"] .tape { font-family: var(--font-ar-display); font-size: clamp(.95rem, 2.4vw, 1.15rem); padding: .3em .7em .2em; }
+.fan .sticker {
+  position: absolute; z-index: 3; width: 34%; left: -4%; bottom: -3%; rotate: -9deg;
+  filter: drop-shadow(0 10px 14px rgba(8, 10, 40, .45));
+}
+.burst {
+  position: absolute; z-index: 3; right: -3%; top: -4%; width: 27%; aspect-ratio: 1;
+  display: grid; place-content: center; text-align: center;
+  background: var(--tomato); color: var(--cream); clip-path: var(--burst); rotate: 12deg;
+  font-family: var(--font-display); text-transform: uppercase; line-height: .92;
+  font-size: clamp(.8rem, 2.6vw, 1.12rem);
+}
+.burst b { display: block; font-weight: 400; font-size: 1.95em; direction: ltr; }
+html[lang="ar"] .burst { font-family: var(--font-ar-display); font-size: clamp(.95rem, 2.8vw, 1.3rem); line-height: 1.1; }
+html[lang="ar"] .burst b { font-family: var(--font-display); font-size: 1.6em; }
+
+/* ---------- ticker ---------- */
+.ticker-zone { position: relative; z-index: 4; overflow-x: clip; margin-block: -38px -6px; padding-block: 10px; }
+.ticker {
+  width: 108%; margin-inline-start: -4%; rotate: -1.6deg; overflow: hidden;
+  background: var(--orange); color: var(--blue-deep);
+  border-block: 3px solid var(--blue-deep);
+}
+.ticker-track { display: flex; width: max-content; }
+.ticker-track span {
+  font-family: var(--font-display); text-transform: uppercase; white-space: nowrap;
+  font-size: clamp(1.1rem, 2.3vw, 1.55rem); line-height: 1; padding-block: .6em .55em;
+}
+.ticker-track span[lang="ar"] { font-family: var(--font-ar-display); text-transform: none; font-size: clamp(1.25rem, 2.6vw, 1.75rem); padding-block: .42em .4em; }
+.ticker-track i { font-style: normal; color: var(--tomato); padding-inline: .7em; font-family: var(--font-display); font-size: clamp(1.1rem, 2.3vw, 1.55rem); line-height: 1; align-self: center; }
+
+/* ---------- section heads ---------- */
+.sec-head { display: grid; gap: 14px; margin-bottom: 36px; }
+.sec-head .row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px 32px; }
+.sec-title { font-size: clamp(2.3rem, 5.6vw, 4.4rem); color: var(--blue); text-shadow: .05em .05em 0 var(--orange); max-width: 14em; }
+.on-dark .sec-title { color: var(--cream); text-shadow: .05em .05em 0 var(--tomato); }
+html[lang="ar"] .sec-title { font-size: clamp(2.5rem, 6vw, 4.4rem); }
+
+/* ---------- kitchen reels ---------- */
+.kitchen { padding-block: 100px 88px; background: var(--cream); }
+.kitchen .lede { color: var(--blue-deep); }
+.motion-btn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+  border-radius: 999px; border: 2px solid var(--blue); background: transparent; color: var(--blue);
+  font-weight: 700; font-size: .92rem; cursor: pointer;
+}
+.motion-btn:hover { background: var(--blue); color: var(--cream); }
+.reels {
+  display: grid; grid-auto-flow: column; grid-auto-columns: clamp(210px, 64vw, 270px); gap: 16px;
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
+  margin-inline: calc(-1 * var(--gutter)); padding: 6px var(--gutter) 24px; scroll-padding-inline: var(--gutter);
+  scrollbar-width: thin; scrollbar-color: var(--blue) transparent;
+}
+.reel {
+  position: relative; margin: 0; aspect-ratio: 4 / 5; overflow: hidden; isolation: isolate;
+  border-radius: 16px; background: var(--blue-deep); scroll-snap-align: start;
+  box-shadow: 0 16px 30px -16px rgba(12, 14, 56, .7);
+}
+.reel video { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; cursor: pointer; }
+.reel:hover video { transform: scale(1.04); }
+.reel figcaption {
+  position: absolute; inset: auto 0 0 0; z-index: 1; pointer-events: none;
+  padding: 52px 14px 13px; color: var(--cream);
+  background: linear-gradient(to top, rgba(12, 14, 52, .88), rgba(12, 14, 52, 0));
+  font-weight: 700; font-size: 1rem; line-height: 1.25;
+}
+.reel figcaption small {
+  display: block; margin-bottom: 4px; color: var(--orange);
+  font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+}
+html[lang="ar"] .reel figcaption small { letter-spacing: 0; font-size: .85rem; }
+@media (min-width: 980px) {
+  .reels { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: visible; margin: 0; padding: 0 0 40px; gap: 22px; }
+  .reels > .reel:nth-child(even) { translate: 0 40px; }
+  .reels > .reel:nth-child(4n+1) { rotate: -1.2deg; }
+  .reels > .reel:nth-child(4n+3) { rotate: 1deg; }
+}
+
+/* ---------- menu on the counter ---------- */
+.counter {
+  position: relative; isolation: isolate;
+  background: var(--granite) url("media/granite.jpg") 0 0 / 360px repeat;
+  padding-block: 88px;
+}
+.counter::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, .12), rgba(30, 18, 12, .38));
+}
+.paper {
+  position: relative; max-width: 1100px; margin-inline: auto;
+  background: var(--paper); border-radius: 6px;
+  padding: 68px clamp(18px, 4.5vw, 60px) 44px;
+  box-shadow: 0 34px 60px -24px rgba(30, 15, 8, .75), 0 2px 0 rgba(30, 15, 8, .12);
+}
+.paper .bunting {
+  height: 44px; background-size: 120px 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40'%3E%3Cpath d='M0 3Q60 12 120 3' fill='none' stroke='%23141A5C' stroke-opacity='.6' stroke-width='1.6'/%3E%3Cpath d='M8 4.1L44 7.2 26 36z' fill='%232B33A0'/%3E%3Cpath d='M68 7.4L104 5.1 86 37z' fill='%23F4A23C'/%3E%3C/svg%3E");
+  border-radius: 6px 6px 0 0;
+}
+.paper-head { display: grid; justify-items: center; gap: 12px; text-align: center; margin-bottom: 26px; }
+.paper-title { font-size: clamp(2.8rem, 8vw, 5.4rem); color: var(--blue); text-shadow: .05em .05em 0 var(--orange); }
+.paper-note { margin: 0; color: var(--muted); font-size: .95rem; }
+
+.pick { display: grid; justify-items: center; gap: 12px; margin-top: 8px; }
+.pick-out {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 4px 12px;
+  border: 2.5px dashed var(--blue); border-radius: 14px; padding: 10px 18px;
+  background: var(--cream); max-width: 100%;
+}
+.pick-label { font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--tomato); }
+html[lang="ar"] .pick-label { letter-spacing: 0; font-size: .95rem; }
+.pick-name { font-family: var(--font-display); text-transform: uppercase; font-weight: 400; font-size: 1.35rem; color: var(--blue); line-height: 1.1; }
+html[lang="ar"] .pick-name { font-family: var(--font-ar-display); font-size: 1.6rem; }
+.pick-price { font-family: var(--font-display); color: var(--tomato); font-size: 1.35rem; line-height: 1.1; }
+.pick-out.landed { animation: land .45s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes land { from { transform: scale(.88) rotate(-2deg); } }
+
+.chips {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--header-h)); z-index: 5;
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+  margin: 0 -6px 26px; padding: 12px 6px;
+  background: var(--paper); border-bottom: 2px dashed var(--line);
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; padding: .42em 1em; border-radius: 999px; white-space: nowrap;
+  border: 2px solid var(--blue); color: var(--blue); background: transparent;
+  font-weight: 700; font-size: .92rem; text-decoration: none; cursor: pointer;
+}
+.chip:hover { background: var(--cream); }
+.chip.is-active { background: var(--blue); color: var(--cream); }
+
+.menu-cols { columns: 2 330px; column-gap: clamp(28px, 6vw, 80px); }
+.cat { break-inside: avoid; margin-bottom: 36px; scroll-margin-top: calc(var(--header-h) + 84px); }
+.cat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 6px; margin-bottom: 8px; border-bottom: 3px solid var(--blue); }
+.cat-head h3 { margin: 0; font-family: var(--font-display); font-weight: 400; text-transform: uppercase; color: var(--blue); font-size: clamp(1.3rem, 2.5vw, 1.7rem); line-height: 1.05; }
+.cat-head .alt { color: var(--tomato); font-size: 1.15rem; line-height: 1.2; text-align: end; }
+.cat-head .alt:lang(ar) { font-family: var(--font-ar-display); font-size: 1.3rem; }
+.cat-head .alt:lang(en) { font-family: var(--font-display); text-transform: uppercase; font-size: .95rem; }
+html[lang="ar"] .cat-head h3 { font-family: var(--font-ar-display); text-transform: none; font-size: clamp(1.55rem, 2.8vw, 1.95rem); line-height: 1.25; }
+.items { list-style: none; margin: 0; padding: 0; }
+.item { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(20, 26, 92, .07); }
+.item:last-child { border-bottom: 0; }
+.item .names { display: grid; min-width: 0; }
+.item .nm { font-weight: 750; font-size: 1.07rem; line-height: 1.3; }
+html[lang="ar"] .item .nm { font-weight: 700; font-size: 1.12rem; }
+.item .al { color: var(--muted); font-size: .93rem; line-height: 1.35; }
+.item .al:lang(ar) { font-family: var(--font-ar-body); }
+.item .al:lang(en) { font-family: var(--font-body); }
+.item .note { color: var(--tomato); font-weight: 650; }
+.item .lead { flex: 1 1 18px; min-width: 18px; border-bottom: 2.5px dotted var(--line); translate: 0 -5px; }
+.item .pr { font-family: var(--font-display); color: var(--blue); font-size: 1.12rem; white-space: nowrap; direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- crowd ---------- */
+.crowd { background: var(--blue-deep); color: var(--cream); padding-block: 96px; overflow: clip; }
+.crowd-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; align-items: center; }
+.crowd .reel { width: min(100%, 380px); margin-inline: auto; rotate: -3deg; border: 5px solid var(--cream); }
+.crowd-copy { display: grid; gap: 22px; justify-items: start; min-width: 0; }
+.crowd .lede { color: var(--cream); opacity: .9; }
+.tags { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.ptag {
+  display: grid; place-content: center; text-align: center; width: 132px; aspect-ratio: 1;
+  clip-path: var(--burst); background: var(--orange); color: var(--blue-deep);
+  font-family: var(--font-display); text-transform: uppercase; line-height: 1; font-size: .82rem;
+}
+.ptag b { display: block; font-weight: 400; font-size: 2.15rem; direction: ltr; margin-top: 4px; }
+.ptag.big { width: 150px; background: var(--tomato); color: var(--cream); rotate: 8deg; }
+.ptag.small { width: 112px; rotate: -6deg; }
+.ptag.small b { font-size: 1.8rem; }
+html[lang="ar"] .ptag { font-family: var(--font-ar-display); font-size: 1rem; }
+html[lang="ar"] .ptag b { font-family: var(--font-display); }
+@media (min-width: 860px) { .crowd-grid { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 64px; } }
+
+/* ---------- meet ---------- */
+.meet { background: var(--cream); padding-block: 100px; overflow: clip; }
+.meet-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; align-items: center; }
+.meet-visual { position: relative; width: min(100%, 420px); margin-inline: auto; }
+.meet-visual .reel { rotate: 2.5deg; border: 5px solid var(--white); box-shadow: var(--shadow); }
+.meet-visual .sticker { position: absolute; z-index: 2; width: 40%; inset-inline-end: -9%; bottom: -12%; rotate: 9deg; filter: drop-shadow(0 10px 14px rgba(8, 10, 40, .35)); }
+.meet-copy { display: grid; gap: 20px; min-width: 0; }
+.meet-copy p { margin: 0; max-width: 36em; font-size: 1.08rem; }
+@media (min-width: 860px) {
+  .meet-grid { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 80px; }
+}
+
+/* ---------- jeetak ---------- */
+.deliver { position: relative; isolation: isolate; overflow: clip; background: var(--jeetak); color: var(--white); padding-block: 88px; }
+.deliver::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-image: radial-gradient(rgba(255, 255, 255, .09) 1.3px, transparent 1.9px); background-size: 16px 16px;
+}
+.deliver-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; align-items: center; }
+.deliver-copy { display: grid; gap: 18px; justify-items: start; min-width: 0; }
+.deliver .kicker { color: var(--blue-deep); }
+.deliver .sec-title { color: var(--white); text-shadow: .05em .05em 0 var(--blue-deep); }
+.deliver-copy p:not(.kicker) { margin: 0; max-width: 30em; font-size: 1.2rem; font-weight: 700; line-height: 1.45; }
+html[lang="ar"] .deliver-copy p:not(.kicker) { line-height: 1.8; }
+.btn-jeetak { background: var(--white); color: var(--blue-deep); box-shadow: 0 4px 0 var(--blue-deep); }
+.btn-jeetak:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--blue-deep); }
+.btn-jeetak:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--blue-deep); }
+.jeetak-mark { margin: 0; display: grid; place-items: center; }
+.jeetak-mark img { width: min(100%, 480px); }
+@media (min-width: 860px) { .deliver-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 64px; } }
+
+/* ---------- visit ---------- */
+.visit { position: relative; isolation: isolate; overflow: clip; background: var(--blue); color: var(--cream); padding-block: 100px; }
+.visit::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-image: radial-gradient(rgba(255, 244, 225, .07) 1.3px, transparent 1.9px); background-size: 16px 16px;
+}
+.visit-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; align-items: center; }
+.facts { display: grid; gap: 0; margin: 0; }
+.fact { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; align-items: baseline; padding-block: 16px; border-top: 2px solid var(--cream-line); }
+.fact:last-child { border-bottom: 2px solid var(--cream-line); }
+.fact dt { color: var(--orange); font-weight: 750; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; }
+html[lang="ar"] .fact dt { letter-spacing: 0; font-size: .95rem; }
+.fact dd { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 1.18rem; font-weight: 650; }
+.fact dd a { text-underline-offset: 4px; text-decoration-color: var(--orange); }
+.fact .handle { direction: ltr; unicode-bidi: isolate; }
+.visit .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.sign-wrap { margin: 0; display: grid; justify-items: center; gap: 18px; }
+.sign {
+  position: relative; width: min(100%, 300px); padding: 28px 30px 24px; rotate: -2deg;
+  background: var(--white); border-radius: 12px;
+  box-shadow: 0 0 0 10px var(--blue-deep), 0 0 70px rgba(255, 244, 225, .35), 0 30px 50px -10px rgba(5, 6, 30, .6);
+}
+.sign img { width: 100%; height: auto; }
+.screw { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--white), #9AA0B8 70%); box-shadow: 0 1px 1px rgba(0, 0, 0, .35); }
+.screw:nth-of-type(1) { top: 10px; left: 10px; } .screw:nth-of-type(2) { top: 10px; right: 10px; }
+.screw:nth-of-type(3) { bottom: 10px; left: 10px; } .screw:nth-of-type(4) { bottom: 10px; right: 10px; }
+.sign-wrap figcaption { font-family: var(--font-script); font-size: 1.7rem; color: var(--orange); line-height: 1; }
+html[lang="ar"] .sign-wrap figcaption { font-family: var(--font-ar-display); font-size: 1.4rem; }
+@media (min-width: 860px) { .visit-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 72px; } }
+
+/* ---------- footer ---------- */
+.foot { background: var(--blue-deep); color: var(--cream); padding-block: 80px 44px; text-align: center; overflow: clip; }
+.sahtein { margin: 0; font-family: var(--font-script); font-weight: 400; font-size: clamp(4.4rem, 17vw, 10.5rem); line-height: .95; color: var(--orange); rotate: -4deg; text-shadow: .035em .035em 0 var(--tomato); }
+.sahtein-ar { display: block; margin-top: 6px; font-family: var(--font-ar-display); font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.3; color: var(--cream); }
+.foot-meta { display: grid; gap: 6px; justify-items: center; margin-top: 40px; font-size: .9rem; opacity: .78; }
+.foot-meta p { margin: 0; max-width: 46em; }
+.foot-meta .handle { direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .ticker-track { animation: marquee 42s linear infinite; }
+  .rays { animation: spin 120s linear infinite; }
+  .shot { animation: deal .85s cubic-bezier(.2, .9, .25, 1.15) both; }
+  .shot-1 { animation-delay: .05s; } .shot-2 { animation-delay: .15s; } .shot-3 { animation-delay: .25s; }
+  .fan .sticker { animation: pop .7s .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .burst { animation: pop .6s .6s cubic-bezier(.3, 1.6, .5, 1) both; }
+  .fan .sticker:hover, .meet-visual .sticker:hover, .brand:hover img { animation: wiggle .5s ease; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.still .ticker-track, .still .rays { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes deal { from { transform: translateY(46px) rotate(-5deg) scale(.92); } }
+@keyframes pop { from { transform: scale(.35) rotate(-18deg); } }
+@keyframes wiggle { 25% { transform: rotate(5deg); } 50% { transform: rotate(-4deg); } 75% { transform: rotate(2deg); } }
+</style>
+
+<a class="skip" href="#menu" data-i18n="skip">Skip to the menu</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Freddy's Snack, back to top">
+      <img src="media/logo-sticker.png" alt="" width="529" height="635">
+      <span>Freddy's Snack</span>
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#kitchen" data-i18n="nav.kitchen">Kitchen</a>
+      <a href="#menu" data-i18n="nav.menu">Menu</a>
+      <a href="#visit" data-i18n="nav.visit">Visit</a>
+    </nav>
+    <button class="lang-btn" id="langBtn" type="button" lang="ar" aria-label="Switch to Arabic">عربي</button>
+    <a class="btn btn-primary" data-link="jeetak" href="https://jeetaklb.com" target="_blank" rel="noopener" data-i18n="nav.order">Order</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero on-dark" id="top">
+    <div class="bunting" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="stamp" data-i18n="hero.stamp">Snack · Khalwet, Lebanon</span>
+        <h1 class="display hero-title" data-i18n="hero.title">Hot off the<br><em>griddle.</em></h1>
+        <p class="lede" data-i18n="hero.lede">Zingers, subs, tawouk, sawda and farrouj, built at the counter and handed over hot.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" data-link="jeetak" href="https://jeetaklb.com" target="_blank" rel="noopener">
+            <span data-i18n="cta.jeetak">Order on Jeetak</span>
+            <svg class="arr" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#menu" data-i18n="hero.menu">See the menu</a>
+        </div>
+        <div class="callline">
+          <span data-i18n="hero.call">Call us</span>
+          <a class="phone-badge" id="heroPhone" data-link="tel" href="tel:+96176039603">76 039 603</a>
+          <button class="copy-btn" type="button" data-copy="+961 76 039 603" data-select="heroPhone">
+            <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 5.5V5a1.5 1.5 0 0 0-1.5-1.5h-9A1.5 1.5 0 0 0 4 5v9a1.5 1.5 0 0 0 1.5 1.5H6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <span data-i18n="copy">Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="fan" dir="ltr">
+        <div class="rays" aria-hidden="true"></div>
+        <figure class="shot shot-1">
+          <video muted loop playsinline preload="none" poster="media/hero-pour.webp" data-src="media/hero-pour.mp4" aria-hidden="true"></video>
+          <figcaption class="tape" data-i18n="tape.pour">the pour</figcaption>
+        </figure>
+        <figure class="shot shot-2">
+          <video muted loop playsinline preload="none" poster="media/hero-pull.webp" data-src="media/hero-pull.mp4" aria-hidden="true"></video>
+          <figcaption class="tape" data-i18n="tape.pull">the pull</figcaption>
+        </figure>
+        <figure class="shot shot-3">
+          <video muted loop playsinline preload="none" poster="media/hero-crispy.webp" data-src="media/hero-crispy.mp4" aria-hidden="true"></video>
+          <figcaption class="tape" data-i18n="tape.crunch">the crunch</figcaption>
+        </figure>
+        <img class="sticker" src="media/logo-sticker.png" alt="Freddy's Snack logo: a smiling man above the words Freddy's Snack and the number 76039603" width="529" height="635">
+        <div class="burst" data-i18n="hero.burst">From<b>1$</b></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker-zone" aria-hidden="true">
+    <div class="ticker" dir="ltr">
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+  </div>
+
+  <section class="kitchen" id="kitchen" aria-labelledby="kitchenTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="kicker" data-i18n="kitchen.kicker">On the counter</p>
+        <div class="row">
+          <h2 class="display sec-title" id="kitchenTitle" data-i18n="kitchen.title">Made right in front of you.</h2>
+          <button class="motion-btn" id="motionBtn" type="button" aria-pressed="false">
+            <svg id="motionIcon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.5" fill="currentColor"/><rect x="14" y="4" width="5" height="16" rx="1.5" fill="currentColor"/></svg>
+            <span id="motionLabel" data-i18n="motion.pause">Pause videos</span>
+          </button>
+        </div>
+        <p class="lede" data-i18n="kitchen.lede">Chicken hits the flat-top, mozzarella goes on by the handful, and every sandwich gets built at the counter while you watch.</p>
+      </div>
+      <div class="reels" id="reels"></div>
+    </div>
+  </section>
+
+  <section class="counter" id="menu" aria-labelledby="menuTitle">
+    <div class="wrap">
+      <div class="paper">
+        <div class="bunting" aria-hidden="true"></div>
+        <div class="paper-head">
+          <p class="kicker" data-i18n="menu.kicker">Everything we make</p>
+          <h2 class="display paper-title" id="menuTitle" data-i18n="menu.title">The Menu</h2>
+          <p class="paper-note" data-i18n="menu.note">Prices in US dollars and may change.</p>
+          <div class="pick">
+            <button class="btn btn-blue" id="pickBtn" type="button">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8.2" cy="8.2" r="1.7" fill="currentColor"/><circle cx="15.8" cy="8.2" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="8.2" cy="15.8" r="1.7" fill="currentColor"/><circle cx="15.8" cy="15.8" r="1.7" fill="currentColor"/></svg>
+              <span id="pickBtnLabel" data-i18n="pick.btn">Can't decide? Let Freddy pick</span>
+            </button>
+            <div class="pick-out" id="pickOut" aria-live="polite" hidden>
+              <span class="pick-label" data-i18n="pick.label">Today's pick</span>
+              <span class="pick-name" id="pickName"></span>
+              <span class="pick-price" id="pickPrice" dir="ltr"></span>
+            </div>
+          </div>
+        </div>
+        <nav class="chips" id="chips" aria-label="Menu sections"></nav>
+        <div class="menu-cols" id="menuCols"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="crowd on-dark" id="crowd" aria-labelledby="crowdTitle">
+    <div class="wrap crowd-grid">
+      <figure class="reel">
+        <video muted loop playsinline preload="none" poster="media/crispy-cut.webp" data-src="media/crispy-cut.mp4" aria-hidden="true"></video>
+      </figure>
+      <div class="crowd-copy">
+        <p class="kicker" data-i18n="crowd.kicker">Big orders</p>
+        <h2 class="display sec-title" id="crowdTitle" data-i18n="crowd.title">Crispy for the whole table.</h2>
+        <p class="lede" data-i18n="crowd.lede">Match night, family lunch, or the whole shabab at once. Freddy's sells crispy by the piece or in packs of 20 and 30.</p>
+        <div class="tags">
+          <div class="ptag small"><span data-i18n="crowd.p1">1 piece</span><b>1$</b></div>
+          <div class="ptag"><span data-i18n="crowd.p20">20 pieces</span><b>35$</b></div>
+          <div class="ptag big"><span data-i18n="crowd.p30">30 pieces</span><b>45$</b></div>
+        </div>
+        <a class="btn btn-primary" data-link="jeetak" href="https://jeetaklb.com" target="_blank" rel="noopener">
+          <span data-i18n="cta.jeetak">Order on Jeetak</span>
+          <svg class="arr" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="meet" id="meet" aria-labelledby="meetTitle">
+    <div class="wrap meet-grid">
+      <div class="meet-visual">
+        <figure class="reel">
+          <video muted loop playsinline preload="none" poster="media/crew.webp" data-src="media/crew.mp4" aria-hidden="true"></video>
+        </figure>
+        <img class="sticker" src="media/logo-sticker.png" alt="" width="529" height="635" loading="lazy">
+      </div>
+      <div class="meet-copy">
+        <p class="kicker" data-i18n="meet.kicker">The crew</p>
+        <h2 class="display sec-title" id="meetTitle" data-i18n="meet.title">Look for the blue sign.</h2>
+        <p data-i18n="meet.p1">Freddy's Snack is an open counter in Khalwet with stone walls and a crew in blue caps and hoodies. The fire stays on, the fryer stays busy, and the farrouj keeps turning.</p>
+        <p data-i18n="meet.p2">Look for the smiling face on the logo. You'll find it on the sign, on the wrapping paper and on the crew's hoodies.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="deliver" id="order" aria-labelledby="deliverTitle">
+    <div class="wrap deliver-grid">
+      <div class="deliver-copy">
+        <p class="kicker" data-i18n="deliver.kicker">Delivery &amp; pickup</p>
+        <h2 class="display sec-title" id="deliverTitle" data-i18n="deliver.title">Hungry at home?</h2>
+        <p data-i18n="deliver.body">Order Freddy's on Jeetak and a rider brings it to your door. Passing by? Order for pickup and grab it on your way.</p>
+        <a class="btn btn-jeetak" data-link="jeetak" href="https://jeetaklb.com" target="_blank" rel="noopener">
+          <span data-i18n="cta.jeetak">Order on Jeetak</span>
+          <svg class="arr" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <figure class="jeetak-mark">
+        <img src="media/jeetak-logo.png" alt="Jeetak, شو ما بدّك" width="1100" height="473" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section class="visit on-dark" id="visit" aria-labelledby="visitTitle">
+    <div class="wrap visit-grid">
+      <div>
+        <div class="sec-head">
+          <p class="kicker" data-i18n="visit.kicker">Visit</p>
+          <h2 class="display sec-title" id="visitTitle" data-i18n="visit.title">Come hungry.</h2>
+        </div>
+        <dl class="facts">
+          <div class="fact"><dt data-i18n="visit.where">Where</dt><dd data-i18n="visit.whereVal">Khalwet, Lebanon</dd></div>
+          <div class="fact">
+            <dt data-i18n="visit.call">Call</dt>
+            <dd>
+              <a id="visitPhone" class="handle" data-link="tel" href="tel:+96176039603">76 039 603</a>
+              <button class="copy-btn" type="button" data-copy="+961 76 039 603" data-select="visitPhone">
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 5.5V5a1.5 1.5 0 0 0-1.5-1.5h-9A1.5 1.5 0 0 0 4 5v9a1.5 1.5 0 0 0 1.5 1.5H6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                <span data-i18n="copy">Copy</span>
+              </button>
+            </dd>
+          </div>
+          <div class="fact">
+            <dt data-i18n="visit.follow">Follow</dt>
+            <dd>
+              <a class="handle" data-link="instagram" href="https://www.instagram.com/freddys_snackk/" target="_blank" rel="noopener">Instagram @freddys_snackk</a>
+              <a class="handle" data-link="tiktok" href="https://www.tiktok.com/@freddysnack76" target="_blank" rel="noopener">TikTok @freddysnack76</a>
+            </dd>
+          </div>
+        </dl>
+        <div class="actions">
+          <a class="btn btn-primary" data-link="jeetak" href="https://jeetaklb.com" target="_blank" rel="noopener">
+            <span data-i18n="cta.jeetak">Order on Jeetak</span>
+            <svg class="arr" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-ghost" id="mapBtn" data-link="map" href="#" target="_blank" rel="noopener" hidden data-i18n="visit.directions">Get directions</a>
+        </div>
+      </div>
+      <figure class="sign-wrap">
+        <div class="sign">
+          <span class="screw"></span><span class="screw"></span><span class="screw"></span><span class="screw"></span>
+          <img src="media/logo-sticker.png" alt="The Freddy's Snack sign" width="529" height="635" loading="lazy">
+        </div>
+        <figcaption data-i18n="visit.look">Look for this sign</figcaption>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="sahtein" dir="ltr">Sahtein!</p>
+    <span class="sahtein-ar" lang="ar" dir="rtl">صحتين!</span>
+    <div class="foot-meta">
+      <p data-i18n="foot.note">Prices in US dollars and may change.</p>
+      <p data-i18n="foot.credit">Food videos from <span class="handle">@lebanon_photo_session</span> and <span class="handle">@freddys_snackk</span>.</p>
+      <p data-i18n="foot.copy">© 2026 Freddy's Snack, Khalwet</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  /* ---- Edit these to update the site ---- */
+  const CONFIG = {
+    jeetak: 'https://jeetaklb.com',             // swap for Freddy's store link inside Jeetak
+    tel: 'tel:+96176039603',
+    instagram: 'https://www.instagram.com/freddys_snackk/',
+    tiktok: 'https://www.tiktok.com/@freddysnack76',
+    map: ''                                      // paste the shop's Google Maps link to show "Get directions"
+  };
+
+  // From the shop's paper menu. [English, Arabic, price in USD, optional note key]
+  const MENU = [
+    { id: 'classics', en: 'Lebanese classics', ar: 'سندويشات لبنانية', items: [
+      ['Grilled Chicken', 'دجاج مشوي', 2.77], ['Sawda', 'سودا', 3.33], ['Chicken', 'دجاج', 3.88],
+      ['Tawouk', 'طاووق', 3.88], ['Sausage', 'نقانق', 4.44], ['Sojouk', 'سجق', 4.44],
+      ['Basterma', 'باسترما', 4.44], ['Escalope', 'اسكالوب', 4.44], ['Rosto', 'روستو', 5],
+      ['Pollo Pesto', 'بولو بيستو', 5] ] },
+    { id: 'subs', en: 'Subs', ar: 'الساب', items: [
+      ['Chicken Sub', 'ساب دجاج', 4.44], ['Francisco', 'فرانسيسكو', 4.44], ['Philadelphia', 'فيلادلفيا', 5],
+      ['Chicken Fajita', 'فاهيتا دجاج', 5], ['Spicy', 'سبايسي', 5], ['Crispy', 'كرسبي', 5], ['Twister', 'تويستر', 5] ] },
+    { id: 'burgers', en: 'Burgers', ar: 'برغر', items: [
+      ['Beef Burger', 'بيف برغر', 5], ['Chicken Breast Burger', 'تشيكن بريست برغر', 5], ['Borsalino Burger', 'بورسالينو برغر', 5] ] },
+    { id: 'zinger', en: 'Zinger & co.', ar: 'زنغر وشركاه', items: [
+      ['Zinger', 'زنغر', 7.77], ['Supreme', 'سوبريم', 7.77], ['Mighty Zinger', 'مايتي زنغر', 8.88], ['Mozza Zinger', 'موزا زنغر', 8.88] ] },
+    { id: 'plates', en: 'Plates & meals', ar: 'صحون ووجبات', items: [
+      ['Rizzo', 'ريزو', 6], ['Combo Meal', 'كومبو ميل', 7.77], ['Plate', 'صحن', 8.77],
+      ['Chicken Fillet', 'فيليه دجاج', 10], ['Farrouj', 'فرّوج', 12, 'note.whole'] ] },
+    { id: 'crispy', en: 'Crispy by the piece', ar: 'كرسبي بالقطعة', items: [
+      ['Crispy, 1 piece', 'كرسبي، قطعة', 1], ['Crispy, 20 pieces', 'كرسبي، 20 قطعة', 35], ['Crispy, 30 pieces', 'كرسبي، 30 قطعة', 45] ] },
+    { id: 'potatoes', en: 'Potatoes', ar: 'بطاطا', items: [
+      ['Potato Box', 'علبة بطاطا', 1], ['Potato Sandwich', 'سندويش بطاطا', 2.77], ['Potato Plate', 'صحن بطاطا', 3.33] ] },
+    { id: 'salads', en: 'Salads', ar: 'سلطات', items: [
+      ['Greek Salad', 'سلطة يونانية', 2.22], ['Chicken Salad', 'سلطة صدر دجاج', 4.44], ['Double Chicken Salad', 'سلطة دجاج دوبل', 6] ] }
+  ];
+
+  const REELS = [
+    { v: 'rain', tag: ['Cheese', 'جبنة'], en: 'Mozzarella by the handful', ar: 'موزاريلا بالكمشة' },
+    { v: 'drizzle', tag: ['Sauce', 'صلصة'], en: 'Cheese sauce, no holding back', ar: 'صلصة جبنة بلا حساب' },
+    { v: 'farrouj', tag: ['Farrouj', 'فرّوج'], en: 'Farrouj turning over the flames', ar: 'الفرّوج عم يدور عالنار' },
+    { v: 'salad', tag: ['Salads', 'سلطات'], en: 'Grilled chicken over a fresh salad', ar: 'دجاج مشوي فوق سلطة طازة' },
+    { v: 'sawda', tag: ['Sawda', 'سودا'], en: 'Sawda in its juices', ar: 'سودا بزومها' },
+    { v: 'melt', tag: ['Griddle', 'عالنار'], en: 'Mozzarella melting into the mix', ar: 'موزاريلا عم تدوب عالخلطة' },
+    { v: 'burger', tag: ['Burgers', 'برغر'], en: 'Double burger, cut down the middle', ar: 'برغر دبل مقصوص بالنص' },
+    { v: 'grill', tag: ['Grill', 'مشاوي'], en: 'Chicken breasts on the grill', ar: 'صدور دجاج عالشوي' }
+  ];
+
+  const TICKER = [['Zinger', 'زنغر'], ['Tawouk', 'طاووق'], ['Sawda', 'سودا'], ['Francisco', 'فرانسيسكو'], ['Crispy', 'كرسبي'],
+    ['Farrouj', 'فرّوج'], ['Rizzo', 'ريزو'], ['Sojouk', 'سجق'], ['Basterma', 'باسترما'], ['Philadelphia', 'فيلادلفيا']];
+
+  const T = {
+    en: {
+      'skip': 'Skip to the menu',
+      'nav.kitchen': 'Kitchen', 'nav.menu': 'Menu', 'nav.visit': 'Visit', 'nav.order': 'Order',
+      'hero.stamp': 'Snack · Khalwet, Lebanon',
+      'hero.title': 'Hot off the<br><em>griddle.</em>',
+      'hero.lede': 'Zingers, subs, tawouk, sawda and farrouj, built at the counter and handed over hot.',
+      'hero.menu': 'See the menu', 'hero.call': 'Call us', 'hero.burst': 'From<b>1$</b>',
+      'cta.jeetak': 'Order on Jeetak',
+      'copy': 'Copy', 'copy.done': 'Copied', 'copy.selected': 'Selected',
+      'tape.pour': 'the pour', 'tape.pull': 'the pull', 'tape.crunch': 'the crunch',
+      'kitchen.kicker': 'On the counter',
+      'kitchen.title': 'Made right in front of you.',
+      'kitchen.lede': 'Chicken hits the flat-top, mozzarella goes on by the handful, and every sandwich gets built at the counter while you watch.',
+      'motion.pause': 'Pause videos', 'motion.play': 'Play videos',
+      'menu.kicker': 'Everything we make', 'menu.title': 'The Menu',
+      'menu.note': 'Prices in US dollars and may change.',
+      'pick.btn': "Can't decide? Let Freddy pick", 'pick.again': 'Pick again', 'pick.label': "Today's pick",
+      'note.whole': 'whole chicken',
+      'crowd.kicker': 'Big orders', 'crowd.title': 'Crispy for the whole table.',
+      'crowd.lede': "Match night, family lunch, or the whole shabab at once. Freddy's sells crispy by the piece or in packs of 20 and 30.",
+      'crowd.p1': '1 piece', 'crowd.p20': '20 pieces', 'crowd.p30': '30 pieces',
+      'meet.kicker': 'The crew', 'meet.title': 'Look for the blue sign.',
+      'meet.p1': "Freddy's Snack is an open counter in Khalwet with stone walls and a crew in blue caps and hoodies. The fire stays on, the fryer stays busy, and the farrouj keeps turning.",
+      'meet.p2': "Look for the smiling face on the logo. You'll find it on the sign, on the wrapping paper and on the crew's hoodies.",
+      'deliver.kicker': 'Delivery &amp; pickup', 'deliver.title': 'Hungry at home?',
+      'deliver.body': "Order Freddy's on Jeetak and a rider brings it to your door. Passing by? Order for pickup and grab it on your way.",
+      'visit.kicker': 'Visit', 'visit.title': 'Come hungry.',
+      'visit.where': 'Where', 'visit.whereVal': 'Khalwet, Lebanon', 'visit.call': 'Call', 'visit.follow': 'Follow',
+      'visit.directions': 'Get directions', 'visit.look': 'Look for this sign',
+      'foot.note': 'Prices in US dollars and may change.',
+      'foot.credit': 'Food videos from <span class="handle">@lebanon_photo_session</span> and <span class="handle">@freddys_snackk</span>.',
+      'foot.copy': "© 2026 Freddy's Snack, Khalwet",
+      'lang.switch': 'Switch to Arabic', 'brand.label': "Freddy's Snack, back to top", 'chips.label': 'Menu sections'
+    },
+    ar: {
+      'skip': 'روح عالمنيو',
+      'nav.kitchen': 'المطبخ', 'nav.menu': 'المنيو', 'nav.visit': 'زورونا', 'nav.order': 'اطلب',
+      'hero.stamp': 'سناك · الخلوات، لبنان',
+      'hero.title': 'من النار<br><em>لإيدك.</em>',
+      'hero.lede': 'زنغر، ساب، طاووق، سودا وفرّوج، بينعملوا عالكونتوار قدّامك وبيوصلوا لإيدك سخنين.',
+      'hero.menu': 'شوف المنيو', 'hero.call': 'اتصل فينا', 'hero.burst': 'من<b>1$</b>',
+      'cta.jeetak': 'اطلب عبر جيتك',
+      'copy': 'نسخ', 'copy.done': 'تم النسخ', 'copy.selected': 'محدّد',
+      'tape.pour': 'الصلصة', 'tape.pull': 'مطّة الجبنة', 'tape.crunch': 'القرمشة',
+      'kitchen.kicker': 'عالكونتوار',
+      'kitchen.title': 'بينعمل قدّام عيونك.',
+      'kitchen.lede': 'الدجاج عالنار، الموزاريلا بالكمشة، وكل سندويش بيتركّب عالكونتوار وانت عم تتفرّج.',
+      'motion.pause': 'وقّف الفيديوهات', 'motion.play': 'شغّل الفيديوهات',
+      'menu.kicker': 'كل شي منعملو', 'menu.title': 'المنيو',
+      'menu.note': 'الأسعار بالدولار الأميركي وقابلة للتغيير.',
+      'pick.btn': 'محتار؟ خلّي فريدي ينقّيلك', 'pick.again': 'نقّي غيرو', 'pick.label': 'نقّيتك اليوم',
+      'note.whole': 'كامل',
+      'crowd.kicker': 'طلبيات كبيرة', 'crowd.title': 'كرسبي لكل الطاولة.',
+      'crowd.lede': 'سهرة ماتش، غدا عيلة، أو الشلّة كلها سوا. الكرسبي بالقطعة، أو بالـ20 وبالـ30.',
+      'crowd.p1': 'قطعة', 'crowd.p20': '20 قطعة', 'crowd.p30': '30 قطعة',
+      'meet.kicker': 'الشباب', 'meet.title': 'دوّر عالآرمة الزرقا.',
+      'meet.p1': 'فريديز سناك كونتوار مفتوح بالخلوات، حيطانه حجر وشبابه بقبعات وهوديز زرق. النار ما بتنطفى، الفراية ما بتوقف، والفرّوج ما بيوقف دوران.',
+      'meet.p2': 'دوّر عالوجّ الضاحك يلي عاللوغو. بتلاقيه عالآرمة، عورق اللفّ، وعلى هوديز الشباب.',
+      'deliver.kicker': 'توصيل واستلام', 'deliver.title': 'جوعان بالبيت؟',
+      'deliver.body': 'اطلب فريديز عبر جيتك والشوفير بيوصلّك ياه لعند الباب. مارق من حدّ المحل؟ اطلب استلام ومرّ خود طلبك.',
+      'visit.kicker': 'زورونا', 'visit.title': 'تعا جوعان.',
+      'visit.where': 'وين', 'visit.whereVal': 'الخلوات، لبنان', 'visit.call': 'تلفون', 'visit.follow': 'تابعونا',
+      'visit.directions': 'خريطة الطريق', 'visit.look': 'دوّر على هالآرمة',
+      'foot.note': 'الأسعار بالدولار الأميركي وقابلة للتغيير.',
+      'foot.credit': 'فيديوهات الأكل من <span class="handle">@lebanon_photo_session</span> و<span class="handle">@freddys_snackk</span>.',
+      'foot.copy': '© 2026 فريديز سناك، الخلوات',
+      'lang.switch': 'التبديل إلى الإنكليزية', 'brand.label': 'فريديز سناك، رجوع لفوق', 'chips.label': 'أقسام المنيو'
+    }
+  };
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const price = p => (Number.isInteger(p) ? String(p) : p.toFixed(2)) + '$';
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  };
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = !!(navigator.connection && navigator.connection.saveData);
+  let lang = 'en';
+
+  /* links */
+  $$('[data-link]').forEach(a => {
+    const url = CONFIG[a.dataset.link];
+    if (url) { a.href = url; a.hidden = false; }
+  });
+
+  /* ticker */
+  const tickerHTML = TICKER.map(([en, ar]) => `<span>${esc(en)}</span><i>✶</i><span lang="ar" dir="rtl">${esc(ar)}</span><i>✶</i>`).join('');
+  $('#tickerTrack').innerHTML = tickerHTML + tickerHTML;
+
+  /* reels */
+  function renderReels() {
+    const host = $('#reels');
+    if (!host.children.length) {
+      host.innerHTML = REELS.map(r => `
+        <figure class="reel">
+          <video muted loop playsinline preload="none" poster="media/${r.v}.webp" data-src="media/${r.v}.mp4" aria-hidden="true"></video>
+          <figcaption><small></small><span></span></figcaption>
+        </figure>`).join('');
+    }
+    $$('.reel figcaption', host).forEach((cap, i) => {
+      const r = REELS[i];
+      cap.querySelector('small').textContent = lang === 'ar' ? r.tag[1] : r.tag[0];
+      cap.querySelector('span').textContent = lang === 'ar' ? r.ar : r.en;
+    });
+  }
+
+  /* menu */
+  function renderMenu() {
+    const alt = lang === 'ar' ? 'en' : 'ar';
+    $('#menuCols').innerHTML = MENU.map(cat => `
+      <section class="cat" id="cat-${cat.id}" aria-labelledby="h-${cat.id}">
+        <div class="cat-head">
+          <h3 id="h-${cat.id}">${esc(lang === 'ar' ? cat.ar : cat.en)}</h3>
+          <span class="alt" lang="${alt}" dir="auto">${esc(lang === 'ar' ? cat.en : cat.ar)}</span>
+        </div>
+        <ul class="items">${cat.items.map(([en, ar, p, note]) => `
+          <li class="item">
+            <span class="names">
+              <span class="nm">${esc(lang === 'ar' ? ar : en)}${note ? ` <span class="note">· ${esc(T[lang][note])}</span>` : ''}</span>
+              <span class="al" lang="${alt}" dir="auto">${esc(lang === 'ar' ? en : ar)}</span>
+            </span>
+            <span class="lead" aria-hidden="true"></span>
+            <span class="pr">${price(p)}</span>
+          </li>`).join('')}
+        </ul>
+      </section>`).join('');
+    $('#chips').innerHTML = MENU.map(c => `<a class="chip" href="#cat-${c.id}" data-cat="${c.id}">${esc(lang === 'ar' ? c.ar : c.en)}</a>`).join('');
+    watchCategories();
+  }
+
+  /* chips: scroll + active state */
+  let catObserver;
+  function setActiveChip(id) {
+    $$('.chip').forEach(ch => {
+      const on = ch.dataset.cat === id;
+      ch.classList.toggle('is-active', on);
+      if (on) { ch.setAttribute('aria-current', 'true'); } else { ch.removeAttribute('aria-current'); }
+    });
+    const active = $(`.chip[data-cat="${id}"]`);
+    const bar = $('#chips');
+    if (active && bar.scrollWidth > bar.clientWidth) {
+      bar.scrollTo({ left: active.offsetLeft - bar.clientWidth / 2 + active.offsetWidth / 2, behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+  }
+  function watchCategories() {
+    if (catObserver) catObserver.disconnect();
+    if (!('IntersectionObserver' in window)) return;
+    const seen = new Map();
+    catObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => seen.set(e.target.id, e.isIntersecting));
+      const first = MENU.find(c => seen.get('cat-' + c.id));
+      if (first) setActiveChip(first.id);
+    }, { rootMargin: '-35% 0px -55% 0px' });
+    $$('.cat').forEach(c => catObserver.observe(c));
+  }
+  $('#chips').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    e.preventDefault();
+    const target = document.getElementById('cat-' + chip.dataset.cat);
+    if (target) target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    setActiveChip(chip.dataset.cat);
+  });
+
+  /* videos: load and play only while on screen */
+  let motionOn = !(reduceMotion || saveData);
+  const onScreen = new Set();
+  const loadVideo = v => { if (!v.getAttribute('src')) { v.src = v.dataset.src; } };
+  const playVideo = v => { loadVideo(v); v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+  let videoObserver;
+  function watchVideos() {
+    const vids = $$('video[data-src]');
+    if (!('IntersectionObserver' in window)) { if (motionOn) vids.forEach(playVideo); return; }
+    videoObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const v = e.target;
+        if (e.isIntersecting) { onScreen.add(v); if (motionOn) playVideo(v); }
+        else { onScreen.delete(v); v.pause(); }
+      });
+    }, { rootMargin: '120px 0px', threshold: 0.15 });
+    vids.forEach(v => {
+      v.muted = true;
+      videoObserver.observe(v);
+      v.addEventListener('click', () => { if (v.paused) { playVideo(v); } else { v.pause(); } });
+    });
+  }
+  function setMotion(on) {
+    motionOn = on;
+    document.documentElement.classList.toggle('still', !on);
+    if (on) { onScreen.forEach(playVideo); } else { $$('video').forEach(v => v.pause()); }
+    paintMotionButton();
+  }
+  function paintMotionButton() {
+    const btn = $('#motionBtn');
+    btn.setAttribute('aria-pressed', String(!motionOn));
+    const key = motionOn ? 'motion.pause' : 'motion.play';
+    $('#motionLabel').dataset.i18n = key;
+    $('#motionLabel').textContent = T[lang][key];
+    $('#motionIcon').innerHTML = motionOn
+      ? '<rect x="5" y="4" width="5" height="16" rx="1.5" fill="currentColor"/><rect x="14" y="4" width="5" height="16" rx="1.5" fill="currentColor"/>'
+      : '<path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/>';
+  }
+  $('#motionBtn').addEventListener('click', () => setMotion(!motionOn));
+
+  /* let Freddy pick */
+  const pool = MENU.filter(c => ['classics', 'subs', 'burgers', 'zinger', 'plates'].includes(c.id)).flatMap(c => c.items);
+  let lastPick = null;
+  function showPick(item) {
+    $('#pickName').textContent = lang === 'ar' ? item[1] : item[0];
+    $('#pickPrice').textContent = price(item[2]);
+  }
+  $('#pickBtn').addEventListener('click', () => {
+    let final;
+    do { final = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && final === lastPick);
+    lastPick = final;
+    const out = $('#pickOut');
+    out.hidden = false;
+    const label = $('#pickBtnLabel');
+    label.dataset.i18n = 'pick.again';
+    label.textContent = T[lang]['pick.again'];
+    if (reduceMotion) { showPick(final); return; }
+    let step = 0;
+    const spin = () => {
+      showPick(pool[Math.floor(Math.random() * pool.length)]);
+      step += 1;
+      if (step < 14) { setTimeout(spin, 45 + step * step * 2.4); }
+      else { showPick(final); out.classList.remove('landed'); void out.offsetWidth; out.classList.add('landed'); }
+    };
+    spin();
+  });
+
+  /* copy phone number */
+  $$('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const label = btn.querySelector('[data-i18n]');
+      const flash = key => {
+        label.textContent = T[lang][key];
+        clearTimeout(btn._t);
+        btn._t = setTimeout(() => { label.textContent = T[lang]['copy']; }, 1800);
+      };
+      const selectNumber = () => {
+        const el = document.getElementById(btn.dataset.select);
+        if (!el) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        flash('copy.selected');
+      };
+      try {
+        navigator.clipboard.writeText(btn.dataset.copy).then(() => flash('copy.done'), selectNumber);
+      } catch (e) { selectNumber(); }
+    });
+  });
+
+  /* language */
+  function setLang(next) {
+    lang = next === 'ar' ? 'ar' : 'en';
+    const root = document.documentElement;
+    root.lang = lang;
+    root.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    $$('[data-i18n]').forEach(el => {
+      const v = T[lang][el.dataset.i18n];
+      if (v != null) el.innerHTML = v;
+    });
+    const btn = $('#langBtn');
+    btn.textContent = lang === 'ar' ? 'English' : 'عربي';
+    btn.lang = lang === 'ar' ? 'en' : 'ar';
+    btn.setAttribute('aria-label', T[lang]['lang.switch']);
+    $('.brand').setAttribute('aria-label', T[lang]['brand.label']);
+    $('#chips').setAttribute('aria-label', T[lang]['chips.label']);
+    renderReels();
+    renderMenu();
+    if (lastPick) showPick(lastPick);
+    paintMotionButton();
+    store.set('fs-lang', lang);
+  }
+  $('#langBtn').addEventListener('click', () => setLang(lang === 'ar' ? 'en' : 'ar'));
+
+  /* boot */
+  let initial = store.get('fs-lang');
+  if (location.hash === '#ar' || location.hash === '#en') initial = location.hash.slice(1);
+  if (!initial) initial = (navigator.language || '').toLowerCase().startsWith('ar') ? 'ar' : 'en';
+  setLang(initial);
+  watchVideos();
+  setMotion(motionOn);
+})();
+</script>
+
+</body></html>
