@@ -3,3 +3,6 @@ DirectoryIndex index.php
 <FilesMatch "\.(json|key|md|txt|log|lock|tmp)$">
   Require all denied
 </FilesMatch>
+<Files "lib.php">
+  Require all denied
+</Files>
