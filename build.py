@@ -271,7 +271,7 @@ def build():
     if "/*@@NAMES@@*/ null" not in game:
         raise SystemExit("game.js: name list placeholder missing")
     game = game.replace("/*@@NAMES@@*/ null", json.dumps(names, ensure_ascii=False, separators=(",", ":")))
-    js = (SRC / "main.js").read_text(encoding="utf-8") + "\n" + game
+    js = (SRC / "main.js").read_text(encoding="utf-8") + "\n" + game + "\n" + (SRC / "track.js").read_text(encoding="utf-8")
 
     wa_qr = qr_matrix("https://wa.me/%s" % PHONE_WA, qrcode.constants.ERROR_CORRECT_M)
     px_qr = qr_matrix("https://pixelabs.tech", qrcode.constants.ERROR_CORRECT_H)

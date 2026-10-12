@@ -1793,6 +1793,10 @@
 
     /* ---------------------------------------------- game states */
     function show(el, on) { if (el) el.hidden = !on; }
+    // the page's visit counter listens for these (src/track.js)
+    function announce(type, detail) {
+      try { window.dispatchEvent(new CustomEvent('jkrush', { detail: Object.assign({ type }, detail || {}) })); } catch (e) { /* old browser */ }
+    }
     function startGame() {
       sound.init();
       skyBlend = currentSky(); skyBlendK = 0;
@@ -1806,6 +1810,7 @@
       toast(sim.village, ELEV[sim.village].toLocaleString('en-US') + ' m', 'village', AR[sim.village]);
       sound.play('start');
       fetchToken();
+      announce('start');
       try { root.focus({ preventScroll: true }); } catch (e) { root.focus(); }
       run();
     }
@@ -1829,6 +1834,7 @@
       state = 'over';
       root.classList.add('is-over'); root.classList.remove('playing');
       const st = sim.stats();
+      announce('end', { score: st.score, time: st.time, village: st.village, villages: st.villages, coins: st.coins, rare: st.rare, kind: sim.crashKind || '' });
       const best = store.get('jkRush.best', 0);
       const isBest = st.score > best;
       if (isBest) store.set('jkRush.best', st.score);
