@@ -792,12 +792,12 @@ function page_foot(): void
 
 function page_login(string $error): void
 {
-    page_head('Jeetak Rush admin');
+    page_head('pixelabs.tech admin');
     ?>
 <form class="login" method="post" autocomplete="on">
   <div>
-    <p class="kicker">Jeetak Rush</p>
-    <h1>Leaderboard admin</h1>
+    <p class="kicker">pixelabs.tech</p>
+    <h1>Admin</h1>
   </div>
   <label for="key">Password</label>
   <input id="key" name="key" type="password" autocomplete="current-password" required autofocus>
