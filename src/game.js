@@ -101,6 +101,7 @@
       this.p = { y: 0, vy: 0, prevY: 0, ground: true, jumps: 0, buffer: 0, inv: 0, helmets: this.mode === 'play' ? 1 : 0, landT: 9, airT: 0 };
       this.objs = []; this.gid = 0;
       this.score = 0; this.coins = 0; this.rare = 0; this.villages = 0; this.bonus = 0;
+      this.pts = { lira: 0, rare: 0, bonus: 0 };   // what makes up the score besides the ride itself
       this.power = { turbo: 0, magnet: 0, double: 0 };
       this.turboK = 0;
       this.route = o.start || 0;                     // index into ROUTE of the current village
@@ -241,6 +242,7 @@
 
     addScore(n, x, y, why) {
       this.bonus += n; this.score += n;
+      if (why === 'coin') this.pts.lira += n; else if (why === 'rare') this.pts.rare += n; else this.pts.bonus += n;
       this.emit('points', { n, x, y, why });
     }
 
@@ -519,7 +521,11 @@
 
     /* --------------------------------------------- final stats */
     stats() {
-      return { score: Math.floor(this.score), coins: this.coins, rare: this.rare, villages: this.villages, village: this.village, time: this.t };
+      const score = Math.floor(this.score), p = this.pts;
+      return {
+        score, coins: this.coins, rare: this.rare, villages: this.villages, village: this.village, time: this.t,
+        ride: score - p.lira - p.rare - p.bonus, liraPts: p.lira, rarePts: p.rare, bonusPts: p.bonus
+      };
     }
   }
 
@@ -1179,8 +1185,9 @@
       start: q('#jgStart'), paused: q('#jgPaused'), over: q('#jgOver'), hud: q('.jg-hud'), toast: q('#jgToast'),
       score: q('#jgScore'), coins: q('#jgCoins'), rare: q('#jgRare'), rareWrap: q('.jg-rare'), helmets: q('#jgHelmets'), powers: q('#jgPowers'),
       place: q('#jgVillage'), elev: q('#jgElev'), best: q('#jgBest'), play: q('#jgPlay'), resume: q('#jgResume'), again: q('#jgAgain'),
-      pause: q('#jgPause'), mute: q('#jgMute'), where: q('#jgOverWhere'), final: q('#jgFinal'), stats: q('#jgStats'),
+      pause: q('#jgPause'), mute: q('#jgMute'), where: q('#jgOverWhere'), final: q('#jgFinal'),
       form: q('#jgForm'), name: q('#jgName'), save: q('#jgSave'), msg: q('#jgMsg'), newBest: q('#jgNewBest'),
+      sum: q('#jgSum'), gain: q('#jgGain'), contact: q('#jgContact'),
       board: document.getElementById('jgBoard'), boardNote: document.getElementById('jgBoardNote')
     };
     const sound = makeSound();
@@ -1661,6 +1668,15 @@
         }
       }
     }
+    let gainAcc = 0, gainTimer = 0;
+    function gain(n, rare) {
+      if (!ui.gain) return;
+      gainAcc += n;
+      ui.gain.textContent = '+' + gainAcc.toLocaleString('en-US');
+      ui.gain.className = 'jg-gain show' + (rare ? ' rare' : '');
+      clearTimeout(gainTimer);
+      gainTimer = setTimeout(() => { gainAcc = 0; if (ui.gain) ui.gain.className = 'jg-gain'; }, 900);
+    }
     let toastTimer = 0;
     function toast(main, sub, tone, ar) {
       if (!ui.toast) return;
@@ -1696,7 +1712,11 @@
             if (live) { sound.play('bounce'); if (e.kind === 'goat' || e.kind === 'goats') sound.play('goat'); else if (e.kind !== 'snowman') sound.play('honk'); }
             burst(e.x, e.y, 8, ['#FFFAE6'], 120, 0.4, 2.4, 0);
             break;
-          case 'points': if (e.why === 'bounce') floatText('+' + e.n, e.x, e.y + 26, '#FFD88A'); else if (e.why === 'rare') floatText('+' + e.n, e.x, e.y + 22, '#E2B8F2'); break;
+          case 'points':
+            if (e.why === 'bounce') floatText('+' + e.n, e.x, e.y + 26, '#FFD88A');
+            else if (e.why === 'rare') floatText('+' + e.n, e.x, e.y + 22, '#E2B8F2');
+            if (state === 'play' && (e.why === 'coin' || e.why === 'rare')) gain(e.n, e.why === 'rare');
+            break;
           case 'helmetLost':
             sound.play('helmet'); shake = 0.7; flash = 0.5;
             floats.push({ helmet: true, x: sim.dist + 68, y: sim.p.y + 82, vx: -140, vy: 520, rot: 0, vr: -9, life: 1.4 });
@@ -1816,12 +1836,30 @@
       const mins = Math.floor(st.time / 60), secs = Math.floor(st.time % 60);
       setText(ui.where, 'where', 'Hit ' + (what[sim.crashKind] || 'trouble') + ' in ' + st.village);
       setText(ui.final, 'final', fmt(st.score));
-      setText(ui.stats, 'stats', st.coins + ' lira · ' + st.rare + ' Phoenician · ' + st.villages + (st.villages === 1 ? ' village' : ' villages') + ' · ' + mins + ':' + String(secs).padStart(2, '0'));
+      if (ui.sum) {
+        ui.sum.textContent = '';
+        const chip = (cls, label, pts) => {
+          const s2 = document.createElement('span'); s2.className = cls;
+          s2.append(label + ' ');
+          const b = document.createElement('b'); b.textContent = pts; s2.appendChild(b);
+          ui.sum.appendChild(s2);
+        };
+        chip('ride', 'Ride', '+' + fmt(st.ride));
+        chip('lira', st.coins + ' lira', '+' + fmt(st.liraPts));
+        if (st.rare) chip('rare', st.rare + ' Phoenician', '+' + fmt(st.rarePts));
+        if (st.bonusPts) chip('bonus', 'Bonus', '+' + fmt(st.bonusPts));
+        chip('time', st.villages + (st.villages === 1 ? ' village in' : ' villages in'), mins + ':' + String(secs).padStart(2, '0'));
+      }
       if (ui.newBest) ui.newBest.hidden = !isBest || st.score < 100;
       if (ui.best) ui.best.textContent = 'Your best: ' + fmt(Math.max(best, st.score));
-      if (ui.form) { ui.form.hidden = st.score < 100 || st.time < 3.5; ui.msg.textContent = ''; ui.msg.className = 'jg-msg'; ui.save.disabled = false; ui.save.textContent = 'Save score'; }
+      if (ui.form) {
+        const canSave = st.score >= 100 && st.time >= 3.5;
+        ui.form.hidden = !canSave; ui.save.hidden = !canSave;
+        ui.msg.textContent = ''; ui.msg.className = 'jg-msg'; ui.save.disabled = false; ui.save.textContent = 'Save score';
+      }
       if (ui.name && !ui.name.value) { const saved = store.get('jkRush.name', ''); ui.name.value = saved && !rudeName(saved) ? saved : ''; }
       if (ui.name && rudeName(ui.name.value)) ui.name.value = '';
+      if (ui.contact && !ui.contact.value) ui.contact.value = store.get('jkRush.contact', '');
       show(ui.hud, false); show(ui.over, true);
       // don't let a held Space bar skip the results
       if (ui.again) { ui.again.disabled = true; setTimeout(() => { ui.again.disabled = false; }, 700); }
@@ -1896,10 +1934,14 @@
       ev.preventDefault();
       if (savedThisRun) return;
       const name = ui.name.value.replace(/\s+/g, ' ').trim();
-      const bad = validName(name) || (rudeName(name) ? 'Please pick a different name.' : '');
+      const contact = ui.contact ? ui.contact.value.replace(/\s+/g, ' ').trim().slice(0, 40) : '';
+      const badContact = contact && (!/^[\p{L}\p{N} +@._()\/-]+$/u.test(contact) || (contact.match(/[\p{L}\p{N}]/gu) || []).length < 3)
+        ? 'For the contact, use a phone number, an Instagram handle or an email.' : '';
+      const bad = validName(name) || (rudeName(name) ? 'Please pick a different name.' : '') || badContact;
       ui.msg.className = 'jg-msg';
       if (bad) { ui.msg.textContent = bad; ui.msg.className = 'jg-msg err'; ui.name.focus(); return; }
       store.set('jkRush.name', name);
+      if (contact) store.set('jkRush.contact', contact);
       const st = sim.stats();
       // fix the local copy's name too
       const local = store.get('jkRush.local', []);
@@ -1912,7 +1954,7 @@
       ui.save.disabled = true; ui.msg.textContent = 'Saving…';
       const played = Math.min(st.time, sim.t - tokenAt + 2);
       try {
-        const d = await api('?a=submit&_=' + Date.now(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ name, score: st.score, coins: st.coins, rare: st.rare, villages: st.villages, village: st.village, time: Math.round(played * 10) / 10, token }) });
+        const d = await api('?a=submit&_=' + Date.now(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ name, contact, score: st.score, coins: st.coins, rare: st.rare, villages: st.villages, village: st.village, time: Math.round(played * 10) / 10, token }) });
         if (d && d.ok) {
           savedThisRun = true;
           online = true;

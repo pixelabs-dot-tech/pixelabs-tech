@@ -118,7 +118,7 @@
 
         <div class="jg-hud" hidden>
           <div class="jg-hud-l">
-            <p class="jg-score" id="jgScore">0</p>
+            <p class="jg-score"><span id="jgScore">0</span><span class="jg-gain" id="jgGain" aria-hidden="true"></span></p>
             <p class="jg-loot"><span class="jg-coin" aria-hidden="true"></span><b id="jgCoins">0</b><span class="jg-rare" hidden><span class="jg-pcoin" aria-hidden="true"></span><b id="jgRare">0</b></span></p>
             <p class="jg-place"><b id="jgVillage"></b><span id="jgElev"></span></p>
           </div>
@@ -154,16 +154,16 @@
           <div class="jg-card">
             <p class="jg-kicker" id="jgOverWhere"></p>
             <p class="jg-final"><span id="jgFinal">0</span><span class="jg-newbest" id="jgNewBest" hidden>New best</span></p>
-            <p class="jg-stats" id="jgStats"></p>
+            <p class="jg-sum" id="jgSum"></p>
             <form class="jg-form" id="jgForm" novalidate>
-              <label for="jgName">Your name on the leaderboard</label>
-              <div class="jg-row">
-                <input id="jgName" name="name" type="text" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="send" placeholder="Your name">
-                <button class="btn jg-save" id="jgSave" type="submit">Save score</button>
-              </div>
+              <label class="jg-vh" for="jgName">Your name on the leaderboard</label>
+              <input id="jgName" name="name" type="text" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="next" placeholder="Your name for the leaderboard">
+              <label class="jg-vh" for="jgContact">Phone or Instagram, optional</label>
+              <input id="jgContact" name="contact" type="text" maxlength="40" autocomplete="tel" spellcheck="false" enterkeyhint="send" placeholder="Phone or Instagram (optional)" aria-describedby="jgPrivate">
+              <p class="jg-fine" id="jgPrivate">Private. Only used to reach you if you win a Jeetak offer.</p>
               <p class="jg-msg" id="jgMsg" role="status"></p>
             </form>
-            <div class="jg-actions"><button class="btn jk-btn" id="jgAgain" type="button">Play again</button></div>
+            <div class="jg-actions"><button class="btn jg-save" id="jgSave" type="submit" form="jgForm">Save score</button><button class="btn jk-btn" id="jgAgain" type="button">Play again</button></div>
           </div>
         </div>
       </div>
@@ -189,6 +189,7 @@
           <p class="jg-board-head" aria-hidden="true"><span>#</span><span>Rider</span><span>Reached</span><span>Score</span></p>
           <ol class="jg-board" id="jgBoard"><li class="empty">Loading…</li></ol>
           <p class="jg-note" id="jgBoardNote"></p>
+          <p class="jg-note">Names are public. Phone numbers and Instagram handles stay private.</p>
         </div>
       </div>
     </div>
