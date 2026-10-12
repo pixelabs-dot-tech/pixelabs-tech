@@ -235,7 +235,13 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     exit;
 }
 
-/* ------------------------------------------------------------------ page */
+/* ------------------------------------------------------------------ pages */
+$view = (string) ($_GET['view'] ?? 'players');
+if ($view === 'analytics') {
+    $range = (int) ($_GET['range'] ?? 7);
+    page_analytics(in_array($range, array(1, 7, 30, 90), true) ? $range : 7);
+}
+
 $stats = read_json('stats.json', array('days' => array()));
 $today = beirut_day(time());
 $day = isset($stats['days'][$today]) ? $stats['days'][$today] : array('starts' => 0, 'saves' => 0, 'site' => 0);
@@ -254,16 +260,7 @@ $csrf = csrf();
 
 page_head('Jeetak Rush admin');
 ?>
-<header class="top">
-  <div>
-    <p class="kicker">Jeetak Rush</p>
-    <h1>Leaderboard admin</h1>
-  </div>
-  <div class="actions">
-    <a class="btn" href="<?= h($self) ?>?export=csv">Download CSV</a>
-    <form method="post"><button class="btn ghost" name="logout" value="1">Sign out</button></form>
-  </div>
-</header>
+<?php page_top('players'); ?>
 
 <?php if (isset($notice[$done])): ?><p class="notice"><?= h($notice[$done]) ?></p><?php endif; ?>
 
@@ -354,6 +351,333 @@ page_head('Jeetak Rush admin');
 <?php
 page_foot();
 
+/* ------------------------------------------------------------------ shared top bar */
+function page_top(string $tab): void
+{
+    global $self;
+    ?>
+<header class="top">
+  <div>
+    <p class="kicker">pixelabs.tech</p>
+    <h1><?= $tab === 'players' ? 'Jeetak Rush players' : 'Site analytics' ?></h1>
+  </div>
+  <div class="actions">
+    <?php if ($tab === 'players'): ?><a class="btn" href="<?= h($self) ?>?export=csv">Download CSV</a><?php endif; ?>
+    <form method="post"><button class="btn ghost" name="logout" value="1">Sign out</button></form>
+  </div>
+</header>
+<nav class="tabs" aria-label="Admin sections">
+  <a href="<?= h($self) ?>" <?= $tab === 'players' ? 'aria-current="page"' : '' ?>>Players</a>
+  <a href="<?= h($self) ?>?view=analytics" <?= $tab === 'analytics' ? 'aria-current="page"' : '' ?>>Analytics</a>
+</nav>
+<?php
+}
+
+/* ------------------------------------------------------------------ analytics */
+function dur(float $s): string
+{
+    $s = (int) round($s);
+    if ($s < 60) {
+        return $s . ' s';
+    }
+    if ($s < 3600) {
+        return intdiv($s, 60) . ' min' . ($s % 60 ? ' ' . ($s % 60) . ' s' : '');
+    }
+    return intdiv($s, 3600) . ' h' . (intdiv($s % 3600, 60) ? ' ' . intdiv($s % 3600, 60) . ' min' : '');
+}
+
+function pct(float $part, float $whole): string
+{
+    return $whole > 0 ? round($part / $whole * 100) . '%' : '0%';
+}
+
+function compact_n(float $n): string
+{
+    if ($n >= 10000) {
+        return round($n / 1000) . 'K';
+    }
+    if ($n >= 1000) {
+        return round($n / 1000, 1) . 'K';
+    }
+    return (string) (int) $n;
+}
+
+// One horizontal bar per row: [label, value used for the bar, text shown at the bar's end]
+function bars(array $rows, string $empty, int $limit = 12, bool $longLabels = false): void
+{
+    if (!$rows) {
+        echo '<p class="empty">' . h($empty) . '</p>';
+        return;
+    }
+    $rows = array_slice($rows, 0, $limit);
+    $max = max(array_map(function ($r) { return (float) $r[1]; }, $rows)) ?: 1;
+    echo '<ul class="bars' . ($longLabels ? ' long' : '') . '">';
+    foreach ($rows as $r) {
+        $w = (float) $r[1] > 0 ? max(0.8, (float) $r[1] / $max * 100) : 0;
+        echo '<li><span class="bl" dir="auto">' . h((string) $r[0]) . '</span>'
+            . '<span class="bt"><i style="width:' . round($w, 2) . '%"></i></span>'
+            . '<span class="bv">' . h((string) $r[2]) . '</span></li>';
+    }
+    echo '</ul>';
+}
+
+function sorted_counts(array $m): array
+{
+    arsort($m);
+    $rows = array();
+    foreach ($m as $k => $n) {
+        $rows[] = array($k, $n, number_format((int) $n));
+    }
+    return $rows;
+}
+
+function tz_label(string $tz): string
+{
+    $city = str_replace('_', ' ', substr((string) strrchr('/' . $tz, '/'), 1));
+    $country = array('Beirut' => 'Lebanon', 'Dubai' => 'UAE', 'Riyadh' => 'Saudi Arabia', 'Qatar' => 'Qatar', 'Kuwait' => 'Kuwait',
+        'Paris' => 'France', 'London' => 'UK', 'Berlin' => 'Germany', 'Montreal' => 'Canada', 'Toronto' => 'Canada',
+        'New York' => 'US East', 'Los Angeles' => 'US West', 'Chicago' => 'US Central', 'Sydney' => 'Australia',
+        'Lagos' => 'Nigeria', 'Abidjan' => 'Ivory Coast', 'Amman' => 'Jordan', 'Damascus' => 'Syria', 'Cairo' => 'Egypt',
+        'Istanbul' => 'Turkey', 'Nicosia' => 'Cyprus', 'Athens' => 'Greece', 'Sao Paulo' => 'Brazil');
+    return isset($country[$city]) ? $city . ' (' . $country[$city] . ')' : ($city !== '' ? $city : $tz);
+}
+
+function column_chart(array $series): void
+{
+    $n = count($series);
+    $max = 1;
+    foreach ($series as $v) {
+        $max = max($max, (int) $v[0]);
+    }
+    $top = (int) ceil($max / 2) * 2 ?: 2;
+    $W = (int) max(420, min(1000, $n * 34)); $H = 170; $pad = 30; $axis = 22;
+    $slot = ($W - $pad) / $n;
+    $bw = min(24, max(3, $slot * 0.62));
+    echo '<figure class="chart"><div class="chart-scroll"><svg viewBox="0 0 ' . $W . ' ' . ($H + $axis) . '" style="min-width:' . (int) round($W * 0.6) . 'px" role="img" aria-label="Visitors per day">';
+    foreach (array(0, $top / 2, $top) as $tick) {
+        $y = $H - $tick / $top * ($H - 10);
+        echo '<line x1="' . $pad . '" x2="' . $W . '" y1="' . round($y, 1) . '" y2="' . round($y, 1) . '" class="grid"/>';
+        echo '<text x="' . ($pad - 6) . '" y="' . round($y + 4, 1) . '" class="tick" text-anchor="end">' . compact_n($tick) . '</text>';
+    }
+    $i = 0;
+    $labelEvery = max(1, (int) ceil($n / 7));
+    foreach ($series as $day => $v) {
+        $x = $pad + $slot * $i + ($slot - $bw) / 2;
+        $hgt = (int) $v[0] / $top * ($H - 10);
+        $date = DateTime::createFromFormat('Y-m-d', $day, new DateTimeZone(TZ));
+        $nice = $date ? $date->format('D j M') : $day;
+        $tip = $nice . ': ' . (int) $v[0] . ' visitor' . ((int) $v[0] === 1 ? '' : 's') . ', ' . (int) $v[1] . ' page view' . ((int) $v[1] === 1 ? '' : 's');
+        echo '<g class="col" tabindex="0" data-tip="' . h($tip) . '" aria-label="' . h($tip) . '">';
+        echo '<rect class="hit" x="' . round($pad + $slot * $i, 1) . '" y="0" width="' . round($slot, 1) . '" height="' . $H . '"/>';
+        if ($hgt > 0) {
+            $r = min(4, $hgt, $bw / 2);
+            $x2 = $x + $bw; $y0 = $H; $y1 = $H - $hgt;
+            echo '<path class="bar" d="M' . round($x, 1) . ' ' . $y0 . 'V' . round($y1 + $r, 1) . 'Q' . round($x, 1) . ' ' . round($y1, 1) . ' ' . round($x + $r, 1) . ' ' . round($y1, 1)
+                . 'H' . round($x2 - $r, 1) . 'Q' . round($x2, 1) . ' ' . round($y1, 1) . ' ' . round($x2, 1) . ' ' . round($y1 + $r, 1) . 'V' . $y0 . 'Z"/>';
+        }
+        echo '</g>';
+        if ($i % $labelEvery === 0 || $i === $n - 1) {
+            echo '<text x="' . round($pad + $slot * $i + $slot / 2, 1) . '" y="' . ($H + 16) . '" class="tick" text-anchor="middle">' . h($date ? $date->format('j M') : $day) . '</text>';
+        }
+        $i++;
+    }
+    echo '<line x1="' . $pad . '" x2="' . $W . '" y1="' . $H . '" y2="' . $H . '" class="base"/>';
+    echo '</svg></div><div class="tip" hidden></div></figure>';
+    echo '<details class="tableview"><summary>Show as a table</summary><table><thead><tr><th>Day</th><th class="num">Visitors</th><th class="num">Page views</th></tr></thead><tbody>';
+    foreach (array_reverse($series, true) as $day => $v) {
+        echo '<tr><td>' . h($day) . '</td><td class="num">' . (int) $v[0] . '</td><td class="num">' . (int) $v[1] . '</td></tr>';
+    }
+    echo '</tbody></table></details>';
+}
+
+function page_analytics(int $range): void
+{
+    global $self;
+    $a = analytics_range($range);
+    $g = $a['game'];
+    $views = (int) $a['views'];
+    page_head('Site analytics');
+    page_top('analytics');
+    ?>
+<nav class="filters" aria-label="Date range">
+  <?php foreach (array(1 => 'Today', 7 => 'Last 7 days', 30 => 'Last 30 days', 90 => 'Last 90 days') as $r => $label): ?>
+    <a href="<?= h($self) ?>?view=analytics&amp;range=<?= $r ?>" <?= $r === $range ? 'aria-current="true"' : '' ?>><?= h($label) ?></a>
+  <?php endforeach; ?>
+</nav>
+
+<section class="kpis">
+  <div class="kpi"><span>Visitors</span><b><?= number_format((int) $a['visitors']) ?></b></div>
+  <div class="kpi"><span>Page views</span><b><?= number_format($views) ?></b></div>
+  <div class="kpi"><span>Average time on the site</span><b><?= $views ? h(dur((float) $a['time'] / $views)) : '0 s' ?></b></div>
+  <div class="kpi"><span>Games played</span><b><?= number_format((int) $g['starts']) ?></b></div>
+  <div class="kpi"><span>Finished but not saved</span><b><?= number_format(max(0, (int) $g['runs'] - (int) $g['saved'])) ?></b><em><?= (int) $g['runs'] ? pct(max(0, (int) $g['runs'] - (int) $g['saved']), (int) $g['runs']) . ' of finished games' : 'no finished games yet' ?></em></div>
+  <div class="kpi"><span>Scores saved</span><b><?= number_format((int) $g['saved']) ?></b></div>
+</section>
+
+<?php if ($range > 1): ?>
+<section class="panel">
+  <h2>Visitors per day</h2>
+  <?php column_chart($a['series']); ?>
+</section>
+<?php endif; ?>
+
+<?php if (!$views && !(int) $g['starts']): ?>
+  <p class="notice">No visits counted for this period yet. Counting started with this update, so give it a day of visitors.</p>
+<?php endif; ?>
+
+<div class="grid">
+  <section class="panel">
+    <h2>Where people spend their time</h2>
+    <p class="hint">Time each part of the page was on screen, and the share of visits that reached it.</p>
+    <?php
+    $rows = array();
+    $secs = $a['sec'];
+    uasort($secs, function ($x, $y) { return $y[0] <=> $x[0]; });
+    foreach ($secs as $name => $p) {
+        $rows[] = array($name, $p[0], dur((float) $p[0]) . ' · ' . pct((int) $p[1], $views));
+    }
+    bars($rows, 'Nothing yet.', 20);
+    ?>
+  </section>
+
+  <section class="panel">
+    <h2>Projects people look at</h2>
+    <p class="hint">Time each project and app was on screen.</p>
+    <?php
+    $rows = array();
+    $items = $a['item'];
+    uasort($items, function ($x, $y) { return $y[0] <=> $x[0]; });
+    foreach ($items as $name => $p) {
+        $rows[] = array($name, $p[0], dur((float) $p[0]) . ' · ' . (int) $p[1] . ' visit' . ((int) $p[1] === 1 ? '' : 's'));
+    }
+    bars($rows, 'Nothing yet.', 20);
+    ?>
+  </section>
+
+  <section class="panel">
+    <h2>What gets clicked</h2>
+    <p class="hint">Links and buttons, with the part of the page they are in.</p>
+    <?php bars(sorted_counts($a['click']), 'No clicks yet.', 15, true); ?>
+  </section>
+
+  <section class="panel">
+    <h2>How far down people scroll</h2>
+    <p class="hint">Share of visits that reached each point of the page.</p>
+    <?php
+    $rows = array();
+    foreach (array('25' => 'A quarter of the page', '50' => 'Halfway', '75' => 'Three quarters', '100' => 'The bottom') as $q => $label) {
+        $rows[] = array($label, (int) $a['depth'][$q], pct((int) $a['depth'][$q], $views));
+    }
+    if (!$views) {
+        $rows = array();
+    }
+    bars($rows, 'Nothing yet.');
+    ?>
+  </section>
+
+  <section class="panel">
+    <h2>The game</h2>
+    <p class="hint">From pressing Play to saving a score.</p>
+    <?php
+    $starts = (int) $g['starts']; $runs = (int) $g['runs']; $saved = (int) $g['saved'];
+    $rows = $starts ? array(
+        array('Pressed Play', $starts, number_format($starts)),
+        array('Finished a run', $runs, number_format($runs) . ' · ' . pct($runs, $starts)),
+        array('Saved their score', $saved, number_format($saved) . ' · ' . pct($saved, max(1, $runs)) . ' of finished'),
+    ) : array();
+    bars($rows, 'No games yet.');
+    if ($starts): ?>
+      <dl class="facts">
+        <div><dt>Left in the middle of a run</dt><dd><?= number_format(max(0, $starts - $runs)) ?></dd></div>
+        <div><dt>Average run</dt><dd><?= $runs ? h(dur((float) $g['secs'] / $runs)) : '–' ?></dd></div>
+        <div><dt>Best score</dt><dd><?= number_format((int) $g['best']) ?></dd></div>
+      </dl>
+    <?php endif; ?>
+  </section>
+
+  <section class="panel">
+    <h2>Scores</h2>
+    <p class="hint">Finished runs by score.</p>
+    <?php
+    $rows = array();
+    foreach (array('Under 250', '250 to 499', '500 to 999', '1,000 to 1,999', '2,000 to 4,999', '5,000 and up') as $band) {
+        $n = (int) ($g['score'][$band] ?? 0);
+        $rows[] = array($band, $n, number_format($n));
+    }
+    bars($runs ? $rows : array(), 'No finished games yet.');
+    ?>
+  </section>
+
+  <section class="panel">
+    <h2>What ends runs</h2>
+    <?php
+    $names = array('hole' => 'Potholes', 'manhole' => 'Open manholes', 'goat' => 'Goats', 'goats' => 'Two goats', 'snowman' => 'Snowmen', 'car' => 'Oncoming cars', 'van' => 'Vans', 'truck' => 'Pickup trucks', 'other' => 'Other');
+    $rows = array();
+    foreach (sorted_counts((array) $g['kind']) as $r) {
+        $rows[] = array($names[$r[0]] ?? $r[0], $r[1], $r[2]);
+    }
+    bars($rows, 'No finished games yet.');
+    ?>
+  </section>
+
+  <section class="panel">
+    <h2>Where runs end</h2>
+    <p class="hint">The village each finished run ended in.</p>
+    <?php bars(sorted_counts((array) $g['reach']), 'No finished games yet.'); ?>
+  </section>
+
+  <section class="panel">
+    <h2>Where visitors come from</h2>
+    <p class="hint">The site that sent them. WhatsApp and most apps don't say, so they count as direct.</p>
+    <?php bars(sorted_counts($a['ref']), 'Nothing yet.', 12, true); ?>
+    <?php if ($a['utm']): ?>
+      <h3>Campaign links</h3>
+      <p class="hint">Links you shared with utm_source, utm_medium and utm_campaign.</p>
+      <?php bars(sorted_counts($a['utm']), '', 12, true); ?>
+    <?php endif; ?>
+  </section>
+
+  <section class="panel">
+    <h2>Devices</h2>
+    <?php bars(sorted_counts($a['dev']), 'Nothing yet.'); ?>
+    <h3>Time zones</h3>
+    <p class="hint">A rough guide to where visitors are.</p>
+    <?php
+    $rows = array();
+    foreach (sorted_counts($a['tz']) as $r) {
+        $rows[] = array(tz_label((string) $r[0]), $r[1], $r[2]);
+    }
+    bars($rows, 'Nothing yet.', 8);
+    ?>
+  </section>
+</div>
+
+<p class="foot">Counted without cookies. Visitors are anonymous and told apart for one day only; no IP addresses are kept. Browsers that ask not to be tracked are not counted. Times are Beirut time.</p>
+<script>
+  (function () {
+    var tip = document.querySelector('.chart .tip'), fig = document.querySelector('.chart');
+    if (!tip || !fig) return;
+    function show(g) {
+      var r = g.getBoundingClientRect(), f = fig.getBoundingClientRect();
+      tip.textContent = g.getAttribute('data-tip');
+      tip.hidden = false;
+      var x = r.left - f.left + r.width / 2;
+      tip.style.left = Math.max(70, Math.min(f.width - 70, x)) + 'px';
+      g.classList.add('on');
+    }
+    function hide(g) { tip.hidden = true; g.classList.remove('on'); }
+    document.querySelectorAll('.chart .col').forEach(function (g) {
+      g.addEventListener('pointerenter', function () { show(g); });
+      g.addEventListener('pointerleave', function () { hide(g); });
+      g.addEventListener('focus', function () { show(g); });
+      g.addEventListener('blur', function () { hide(g); });
+    });
+  })();
+</script>
+<?php
+    page_foot();
+}
+
 /* ------------------------------------------------------------------ templates */
 function page_head(string $title): void
 {
@@ -407,6 +731,49 @@ function page_head(string $title): void
   .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
   .chips li { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); }
   .foot { margin: 0; color: var(--dim); font-size: .85rem; }
+  .tabs, .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tabs a, .filters a { padding: 8px 14px; border-radius: 999px; color: var(--dim); text-decoration: none; font-weight: 600; font-size: .9rem; box-shadow: inset 0 0 0 1px var(--line); }
+  .tabs a[aria-current], .filters a[aria-current] { background: var(--cream); color: #10241B; box-shadow: none; }
+  .filters a { padding: 6px 12px; font-size: .85rem; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .kpi { padding: 14px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 4px; align-content: start; }
+  .kpi span { color: var(--dim); font-size: .85rem; }
+  .kpi b { font-size: 1.8rem; line-height: 1.1; font-weight: 650; }
+  .kpi em { font-style: normal; color: var(--dim); font-size: .8rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+  .panel { padding: 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+  .panel h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  .panel h3 { margin: 18px 0 8px; font-size: .95rem; }
+  .hint { margin: 0 0 12px; color: var(--dim); font-size: .82rem; }
+  .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .bars li { display: grid; grid-template-columns: minmax(90px, 38%) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: .88rem; }
+  .bl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+  .bars.long li { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .bars.long .bl { grid-column: 1 / -1; white-space: normal; }
+  .bt { height: 12px; }
+  .bt i { display: block; height: 12px; background: #E8622A; border-radius: 0 4px 4px 0; }
+  .bv { color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .82rem; }
+  .facts { margin: 14px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .facts div { padding: 10px; border-radius: 10px; background: rgba(255,250,230,.05); }
+  .facts dt { color: var(--dim); font-size: .78rem; }
+  .facts dd { margin: 2px 0 0; font-weight: 650; }
+  .chart { position: relative; margin: 8px 0 0; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .grid { stroke: rgba(255,250,230,.1); stroke-width: 1; }
+  .chart .base { stroke: rgba(255,250,230,.3); stroke-width: 1; }
+  .chart-scroll { overflow-x: auto; }
+  .chart .tick { fill: var(--dim); font-size: 12px; font-family: system-ui, sans-serif; }
+  .chart .bar { fill: #E8622A; }
+  .chart .hit { fill: transparent; }
+  .chart .col { outline: none; cursor: default; }
+  .chart .col.on .bar, .chart .col:focus .bar { fill: #F2804F; }
+  .chart .col.on .hit, .chart .col:focus .hit { fill: rgba(255,250,230,.05); }
+  .chart .tip { position: absolute; top: -6px; transform: translate(-50%, -100%); padding: 6px 10px; border-radius: 8px; background: var(--cream); color: #10241B; font-size: .8rem; font-weight: 600; white-space: nowrap; pointer-events: none; }
+  .tableview { margin-top: 10px; color: var(--dim); font-size: .85rem; }
+  .tableview summary { cursor: pointer; }
+  .tableview table { min-width: 0; margin-top: 8px; }
+  .tableview td, .tableview th { padding: 6px 10px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: minmax(0, 1fr); } .facts { grid-template-columns: minmax(0, 1fr); } .bars li { grid-template-columns: minmax(80px, 40%) minmax(0, 1fr) auto; } }
   .login { max-width: 380px; margin: 12vh auto 0; padding: 26px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 14px; }
   .login input { width: 100%; min-width: 0; }
   .err { margin: 0; color: #FFB59A; }

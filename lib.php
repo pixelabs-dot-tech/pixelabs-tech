@@ -362,3 +362,234 @@ function client_hash(): string
     $ua = isset($_SERVER['HTTP_USER_AGENT']) ? substr((string) $_SERVER['HTTP_USER_AGENT'], 0, 160) : '';
     return substr(hash_hmac('sha256', $ip . '|' . $ua, secret()), 0, 24);
 }
+
+/* ------------------------------------------------------------------ site analytics
+   One small JSON file per day (Beirut time) in jeetak-rush-data/analytics/.
+   Visitors are told apart for one day only, by a keyed hash of IP and browser
+   whose key is replaced every day and then deleted, so no IP address is stored
+   and nobody can be followed from one day to the next. No cookies. */
+const KILL_KINDS = array('hole', 'manhole', 'goat', 'goats', 'snowman', 'car', 'van', 'truck');
+
+function analytics_blank(): array
+{
+    return array(
+        'views' => 0, 'u' => array(), 'ref' => array(), 'utm' => array(), 'dev' => array(), 'tz' => array(),
+        'time' => 0.0, 'sec' => array(), 'item' => array(),
+        'depth' => array('25' => 0, '50' => 0, '75' => 0, '100' => 0),
+        'click' => array(),
+        'game' => array('starts' => 0, 'runs' => 0, 'saved' => 0, 'secs' => 0.0, 'best' => 0, 'score' => array(), 'kind' => array(), 'reach' => array()),
+        'rl' => array(),
+    );
+}
+
+function analytics_file(string $day): string
+{
+    $dir = data_dir() . '/analytics';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    return 'analytics/' . $day . '.json';
+}
+
+function analytics_read(string $day): ?array
+{
+    $d = read_json(analytics_file($day), null);
+    if (!is_array($d)) {
+        return null;
+    }
+    $d = array_replace(analytics_blank(), $d);
+    $d['game'] = array_replace(analytics_blank()['game'], (array) $d['game']);
+    return $d;
+}
+
+// a stand-in for "the same visitor today": keyed hash, key replaced daily
+function visitor_today(string $day): string
+{
+    $dir = data_dir() . '/analytics';
+    $f = $dir . '/.key-' . $day;
+    if (!is_file($f)) {
+        file_put_contents($f, bin2hex(random_bytes(16)));
+        @chmod($f, 0600);
+        foreach (glob($dir . '/.key-*') ?: array() as $old) {
+            if ($old !== $f && filemtime($old) < time() - 86400) {
+                @unlink($old);
+            }
+        }
+    }
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '0';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = trim(explode(',', (string) $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+    }
+    $ua = isset($_SERVER['HTTP_USER_AGENT']) ? substr((string) $_SERVER['HTTP_USER_AGENT'], 0, 200) : '';
+    return substr(hash_hmac('sha256', $ip . '|' . $ua, (string) file_get_contents($f)), 0, 16);
+}
+
+function clip(string $s, int $n): string
+{
+    return mb_substr(clean_name($s), 0, $n, 'UTF-8');
+}
+
+function bump(array &$m, string $k, $by = 1, int $cap = 150): void
+{
+    if ($k === '') {
+        return;
+    }
+    if (!isset($m[$k]) && count($m) >= $cap) {
+        $k = 'Other';
+    }
+    $m[$k] = (isset($m[$k]) ? $m[$k] : 0) + $by;
+}
+
+// [seconds on screen, visits that saw it]
+function bump_seen(array &$m, string $k, float $secs, int $visits, int $cap = 80): void
+{
+    if ($k === '' || (!isset($m[$k]) && count($m) >= $cap)) {
+        return;
+    }
+    if (!isset($m[$k])) {
+        $m[$k] = array(0.0, 0);
+    }
+    $m[$k][0] = round((float) $m[$k][0] + $secs, 1);
+    $m[$k][1] = (int) $m[$k][1] + $visits;
+}
+
+function score_band(int $s): string
+{
+    if ($s < 250) {
+        return 'Under 250';
+    }
+    if ($s < 500) {
+        return '250 to 499';
+    }
+    if ($s < 1000) {
+        return '500 to 999';
+    }
+    if ($s < 2000) {
+        return '1,000 to 1,999';
+    }
+    if ($s < 5000) {
+        return '2,000 to 4,999';
+    }
+    return '5,000 and up';
+}
+
+// Record one event from the page. Call inside with_lock().
+function analytics_record(array $in): void
+{
+    $e = (string) ($in['e'] ?? '');
+    if (!in_array($e, array('view', 'time', 'click', 'gstart', 'grun', 'saved'), true)) {
+        return;
+    }
+    $day = beirut_day(time());
+    $d = analytics_read($day) ?? analytics_blank();
+    if ($e !== 'saved') {
+        $who = visitor_today($day);
+        $d['rl'][$who] = (int) ($d['rl'][$who] ?? 0) + 1;
+        if ($d['rl'][$who] > 800) {
+            return;   // one browser cannot flood the numbers
+        }
+    }
+    switch ($e) {
+        case 'view':
+            $d['views']++;
+            $d['u'][$who] = 1;
+            $ref = clip((string) ($in['ref'] ?? ''), 60);
+            bump($d['ref'], $ref === '' ? 'Direct, WhatsApp or an app' : $ref);
+            $utm = trim(clip((string) ($in['us'] ?? ''), 30) . ' / ' . clip((string) ($in['um'] ?? ''), 30) . ' / ' . clip((string) ($in['uc'] ?? ''), 40), ' /');
+            if ($utm !== '') {
+                bump($d['utm'], $utm);
+            }
+            $dev = (string) ($in['dev'] ?? '');
+            bump($d['dev'], in_array($dev, array('Phone', 'Tablet', 'Computer'), true) ? $dev : 'Other');
+            $tz = (string) ($in['tz'] ?? '');
+            bump($d['tz'], preg_match('~^[A-Za-z_]+(/[A-Za-z_\-+0-9]+){0,2}$~', $tz) ? $tz : 'Unknown');
+            break;
+        case 'time':
+            $t = min(3600.0, max(0.0, (float) ($in['t'] ?? 0)));
+            $d['time'] = round((float) $d['time'] + $t, 1);
+            foreach (array('sec', 'item') as $kind) {
+                foreach ((array) ($in[$kind] ?? array()) as $name => $secs) {
+                    bump_seen($d[$kind], clip((string) $name, 40), min($t + 5, max(0.0, (float) $secs)), 0);
+                }
+            }
+            foreach ((array) ($in['first'] ?? array()) as $f) {
+                $parts = explode('|', (string) $f, 2);
+                if (count($parts) === 2 && ($parts[0] === 'sec' || $parts[0] === 'item')) {
+                    bump_seen($d[$parts[0]], clip($parts[1], 40), 0.0, 1);
+                }
+            }
+            foreach ((array) ($in['depth'] ?? array()) as $q) {
+                $q = (string) (int) $q;
+                if (isset($d['depth'][$q])) {
+                    $d['depth'][$q]++;
+                }
+            }
+            break;
+        case 'click':
+            $k = clip((string) ($in['k'] ?? ''), 60);
+            $s = clip((string) ($in['s'] ?? ''), 30);
+            bump($d['click'], $k . ($s !== '' ? ' · ' . $s : ''), 1, 200);
+            break;
+        case 'gstart':
+            $d['game']['starts']++;
+            break;
+        case 'grun':
+            $score = max(0, min(5000000, (int) ($in['score'] ?? 0)));
+            $d['game']['runs']++;
+            $d['game']['secs'] = round((float) $d['game']['secs'] + min(3600.0, max(0.0, (float) ($in['time'] ?? 0))), 1);
+            $d['game']['best'] = max((int) $d['game']['best'], $score);
+            bump($d['game']['score'], score_band($score));
+            $kind = (string) ($in['kind'] ?? '');
+            bump($d['game']['kind'], in_array($kind, KILL_KINDS, true) ? $kind : 'other');
+            bump($d['game']['reach'], clip((string) ($in['village'] ?? ''), 24), 1, 40);
+            break;
+        case 'saved':
+            $d['game']['saved']++;
+            break;
+    }
+    write_json(analytics_file($day), $d);
+}
+
+// Totals over the last $days days, plus the daily series for the chart.
+function analytics_range(int $days): array
+{
+    $agg = analytics_blank();
+    $agg['visitors'] = 0;
+    $agg['series'] = array();
+    for ($i = $days - 1; $i >= 0; $i--) {
+        $day = beirut_day(time() - $i * 86400);
+        $d = analytics_read($day);
+        $agg['series'][$day] = array($d ? count($d['u']) : 0, $d ? (int) $d['views'] : 0);
+        if (!$d) {
+            continue;
+        }
+        $agg['views'] += (int) $d['views'];
+        $agg['visitors'] += count($d['u']);
+        $agg['time'] += (float) $d['time'];
+        foreach (array('ref', 'utm', 'dev', 'tz', 'click') as $k) {
+            foreach ($d[$k] as $name => $n) {
+                $agg[$k][$name] = ($agg[$k][$name] ?? 0) + (int) $n;
+            }
+        }
+        foreach (array('sec', 'item') as $k) {
+            foreach ($d[$k] as $name => $pair) {
+                $agg[$k][$name] = array(($agg[$k][$name][0] ?? 0) + (float) $pair[0], ($agg[$k][$name][1] ?? 0) + (int) $pair[1]);
+            }
+        }
+        foreach ($d['depth'] as $q => $n) {
+            $agg['depth'][$q] += (int) $n;
+        }
+        foreach (array('starts', 'runs', 'saved') as $k) {
+            $agg['game'][$k] += (int) $d['game'][$k];
+        }
+        $agg['game']['secs'] += (float) $d['game']['secs'];
+        $agg['game']['best'] = max($agg['game']['best'], (int) $d['game']['best']);
+        foreach (array('score', 'kind', 'reach') as $k) {
+            foreach ((array) $d['game'][$k] as $name => $n) {
+                $agg['game'][$k][$name] = ($agg['game'][$k][$name] ?? 0) + (int) $n;
+            }
+        }
+    }
+    unset($agg['u'], $agg['rl']);
+    return $agg;
+}

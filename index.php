@@ -6,6 +6,7 @@
  *   GET  ?a=start       -> signed run token (issued when a run starts)
  *   GET  ?a=check&name= -> whether a name is allowed (nothing is saved)
  *   POST ?a=submit      -> body: JSON {name, contact?, score, coins, rare, villages, village, time, token}
+ *   POST ?a=t           -> anonymous visit counting from pixelabs.tech (see lib.php, site analytics)
  *
  * Data lives outside the web root. Nothing secret is stored in this repository:
  * the signing key is generated on the server the first time it is needed.
@@ -34,6 +35,22 @@ if ($method === 'GET' && $a === 'top') {
     $n = isset($_GET['n']) ? max(1, min(50, (int) $_GET['n'])) : 10;
     $board = read_json('board.json', array());
     send(200, array('ok' => true, 'top' => board_public($board, $n), 'total' => count($board)));
+}
+
+if ($method === 'POST' && $a === 't') {
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    $local = preg_match('~^http://(localhost|127\.0\.0\.1)(:\d{1,5})?$~', $origin) === 1;
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $robot = preg_match('/bot|crawl|spider|slurp|lighthouse|pagespeed|preview/i', $ua) === 1 || (!$local && stripos($ua, 'headless') !== false);
+    if ((from_site() || $local) && !$robot) {
+        $raw = (string) file_get_contents('php://input', false, null, 0, MAX_BODY + 1);
+        $in = strlen($raw) <= MAX_BODY ? json_decode($raw, true) : null;
+        if (is_array($in)) {
+            with_lock(function () use ($in) { analytics_record($in); });
+        }
+    }
+    http_response_code(204);
+    exit;
 }
 
 if ($method === 'GET' && $a === 'check') {
@@ -196,6 +213,7 @@ if ($method === 'POST' && $a === 'submit') {
         write_json('used.json', $used);
         write_json('rate.json', $rate);
         bump_stats('saves', false);
+        analytics_record(array('e' => 'saved'));
 
         return array(200, array(
             'ok' => true,
