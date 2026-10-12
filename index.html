@@ -270,7 +270,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 }
 .jk-game.playing { cursor: pointer; }
 .jk-game:focus-visible { box-shadow: inset 0 0 0 3px var(--jk-orange-lit); }
-@media (max-width: 640px) { .jk-game { height: max(320px, 86vw); } }
+@media (max-width: 640px) { .jk-game { height: max(360px, 98vw); } }
 .jg-world, .jg-fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .jg-fx { z-index: 2; pointer-events: none; }
 .jg-scooter { position: absolute; left: 0; top: 0; z-index: 1; width: 140px; pointer-events: none; will-change: transform; }
@@ -301,7 +301,10 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 }
 .jg-hud[hidden] { display: none; }
 .jg-hud p { margin: 0; }
-.jg-score { font-family: var(--f-dot); font-weight: 800; font-size: clamp(1.6rem, 3.2vw, 2.4rem); line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.jg-score { display: flex; align-items: baseline; gap: 10px; font-family: var(--f-dot); font-weight: 800; font-size: clamp(1.6rem, 3.2vw, 2.4rem); line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.jg-gain { font-size: .55em; color: #FFE7A0; opacity: 0; transform: translateY(4px); transition: opacity .15s ease, transform .15s ease; }
+.jg-gain.show { opacity: 1; transform: none; }
+.jg-gain.rare { color: #E2B8F2; }
 .jg-loot { display: flex; align-items: center; gap: 6px; margin-top: 6px !important; font-weight: 600; font-size: .95rem; font-variant-numeric: tabular-nums; }
 .jg-rare { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; }
 .jg-rare[hidden] { display: none; }
@@ -347,7 +350,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 .jg-panel[hidden] { display: none; }
 .jg-paused, .jg-over { background: rgba(8, 20, 14, .45); }
 .jg-card {
-  width: min(100%, 540px); display: grid; justify-items: center; gap: 10px; text-align: center;
+  width: min(100%, 540px); max-height: 100%; overflow-y: auto; display: grid; justify-items: center; gap: 10px; text-align: center;
   padding: clamp(18px, 2.6vw, 28px) clamp(18px, 3vw, 32px);
   background: rgba(13, 30, 22, .78); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 250, 230, .14); border-radius: 18px;
@@ -365,13 +368,26 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 .jg-final { display: flex; align-items: center; gap: 12px; font-family: var(--f-dot); font-weight: 800; font-size: clamp(2.4rem, 7vw, 3.8rem); line-height: 1; }
 .jg-newbest { font: 700 .72rem/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; padding: 6px 8px; border-radius: 6px; background: var(--jk-orange); color: var(--jk-cream); }
 .jg-newbest[hidden] { display: none; }
-.jg-stats { color: var(--jk-cream-dim); font-size: .92rem; font-variant-numeric: tabular-nums; }
-.jg-form { display: grid; gap: 6px; width: 100%; max-width: 420px; margin-top: 6px; text-align: left; }
+.jg-sum { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; font-size: .86rem; color: var(--jk-cream-dim); font-variant-numeric: tabular-nums; }
+.jg-sum span { padding: 3px 9px; border-radius: 999px; background: rgba(255, 250, 230, .08); white-space: nowrap; }
+.jg-over .jg-card { gap: 8px; padding-block: 20px; }
+.jg-over .jg-actions { margin-top: 2px; }
+.jg-over .jg-actions .btn { white-space: nowrap; }
+.jg-over .jg-msg:empty { display: none; }
+.jg-sum b { color: var(--jk-cream); font-weight: 700; }
+.jg-sum .lira b { color: #FFE7A0; } .jg-sum .rare b { color: #E2B8F2; }
+.jg-form { display: grid; gap: 6px; width: 100%; max-width: 420px; margin-top: 4px; text-align: left; }
 .jg-form[hidden] { display: none; }
 .jg-form label { font-size: .82rem; color: var(--jk-cream-dim); }
 .jg-row { display: flex; gap: 8px; }
-.jg-row input { flex: 1; min-width: 0; height: 46px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255, 250, 230, .35); background: rgba(5, 14, 10, .55); color: var(--jk-cream); font: 500 1rem var(--f-body); unicode-bidi: plaintext; }
-.jg-row input:focus { outline: 2px solid var(--jk-orange-lit); outline-offset: 1px; }
+.jg-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.jg-form input { width: 100%; }
+.jg-row input, #jgContact, #jgName { flex: 1; min-width: 0; height: 46px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255, 250, 230, .35); background: rgba(5, 14, 10, .55); color: var(--jk-cream); font: 500 1rem var(--f-body); unicode-bidi: plaintext; }
+#jgName { height: 44px; }
+#jgContact { height: 40px; font-size: .95rem; }
+.jg-save[hidden] { display: none; }
+.jg-row input:focus, #jgContact:focus, #jgName:focus { outline: 2px solid var(--jk-orange-lit); outline-offset: 1px; }
+.jg-fine { font-size: .75rem; color: var(--jk-cream-dim); opacity: .85; }
 .jg-save { --bg: var(--jk-cream); --fg: var(--jk-pine-deep); min-height: 46px; padding: 0 16px; }
 .jg-save:disabled { opacity: .55; cursor: default; }
 .jg-msg { min-height: 1.2em; font-size: .85rem; color: var(--jk-cream-dim); }
@@ -380,12 +396,23 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
   .jg-card { gap: 8px; padding: 14px 16px; border-radius: 14px; }
   .jg-keys span + span, .jg-start .jg-sub { font-size: .82rem; }
   .jg-over .jg-kicker { font-size: .7rem; }
-  .jg-final { font-size: 2.3rem; }
+  .jg-final { font-size: 2.1rem; }
+  .jg-over .jg-card { gap: 6px; }
+  #jgName, .jg-over .btn { height: 42px; min-height: 42px; }
+  #jgContact { height: 38px; }
+  .jg-over .jg-actions { gap: 8px; width: 100%; flex-wrap: nowrap; }
+  .jg-over .jg-actions .btn { min-width: 0; flex: 1 1 0; padding: 0 10px; }
+  .jg-over .jg-card { padding-block: 14px; gap: 7px; }
   .jg-toast { top: 36%; }
   .jg-save { padding: 0 12px; }
   .jg-actions .btn { min-height: 44px; min-width: 130px; }
 }
-@media (max-width: 640px) and (max-height: 0px) { .jg-keys { display: none; } }
+@media (max-width: 380px) {
+  .jg-sum { gap: 4px; font-size: .78rem; }
+  .jg-sum span { padding: 2px 7px; }
+  .jg-final { font-size: 1.9rem; }
+  .jg-fine { font-size: .7rem; }
+}
 
 .jg-below { scroll-margin-top: calc(var(--head) + 8px); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 56px); padding-block: clamp(28px, 4vw, 48px) clamp(56px, 7vw, 96px); }
 @media (max-width: 900px) { .jg-below { grid-template-columns: minmax(0, 1fr); } }
@@ -821,7 +848,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 
         <div class="jg-hud" hidden>
           <div class="jg-hud-l">
-            <p class="jg-score" id="jgScore">0</p>
+            <p class="jg-score"><span id="jgScore">0</span><span class="jg-gain" id="jgGain" aria-hidden="true"></span></p>
             <p class="jg-loot"><span class="jg-coin" aria-hidden="true"></span><b id="jgCoins">0</b><span class="jg-rare" hidden><span class="jg-pcoin" aria-hidden="true"></span><b id="jgRare">0</b></span></p>
             <p class="jg-place"><b id="jgVillage"></b><span id="jgElev"></span></p>
           </div>
@@ -857,16 +884,16 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
           <div class="jg-card">
             <p class="jg-kicker" id="jgOverWhere"></p>
             <p class="jg-final"><span id="jgFinal">0</span><span class="jg-newbest" id="jgNewBest" hidden>New best</span></p>
-            <p class="jg-stats" id="jgStats"></p>
+            <p class="jg-sum" id="jgSum"></p>
             <form class="jg-form" id="jgForm" novalidate>
-              <label for="jgName">Your name on the leaderboard</label>
-              <div class="jg-row">
-                <input id="jgName" name="name" type="text" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="send" placeholder="Your name">
-                <button class="btn jg-save" id="jgSave" type="submit">Save score</button>
-              </div>
+              <label class="jg-vh" for="jgName">Your name on the leaderboard</label>
+              <input id="jgName" name="name" type="text" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="next" placeholder="Your name for the leaderboard">
+              <label class="jg-vh" for="jgContact">Phone or Instagram, optional</label>
+              <input id="jgContact" name="contact" type="text" maxlength="40" autocomplete="tel" spellcheck="false" enterkeyhint="send" placeholder="Phone or Instagram (optional)" aria-describedby="jgPrivate">
+              <p class="jg-fine" id="jgPrivate">Private. Only used to reach you if you win a Jeetak offer.</p>
               <p class="jg-msg" id="jgMsg" role="status"></p>
             </form>
-            <div class="jg-actions"><button class="btn jk-btn" id="jgAgain" type="button">Play again</button></div>
+            <div class="jg-actions"><button class="btn jg-save" id="jgSave" type="submit" form="jgForm">Save score</button><button class="btn jk-btn" id="jgAgain" type="button">Play again</button></div>
           </div>
         </div>
       </div>
@@ -892,6 +919,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
           <p class="jg-board-head" aria-hidden="true"><span>#</span><span>Rider</span><span>Reached</span><span>Score</span></p>
           <ol class="jg-board" id="jgBoard"><li class="empty">Loading…</li></ol>
           <p class="jg-note" id="jgBoardNote"></p>
+          <p class="jg-note">Names are public. Phone numbers and Instagram handles stay private.</p>
         </div>
       </div>
     </div>
@@ -2637,6 +2665,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
       this.p = { y: 0, vy: 0, prevY: 0, ground: true, jumps: 0, buffer: 0, inv: 0, helmets: this.mode === 'play' ? 1 : 0, landT: 9, airT: 0 };
       this.objs = []; this.gid = 0;
       this.score = 0; this.coins = 0; this.rare = 0; this.villages = 0; this.bonus = 0;
+      this.pts = { lira: 0, rare: 0, bonus: 0 };   // what makes up the score besides the ride itself
       this.power = { turbo: 0, magnet: 0, double: 0 };
       this.turboK = 0;
       this.route = o.start || 0;                     // index into ROUTE of the current village
@@ -2777,6 +2806,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 
     addScore(n, x, y, why) {
       this.bonus += n; this.score += n;
+      if (why === 'coin') this.pts.lira += n; else if (why === 'rare') this.pts.rare += n; else this.pts.bonus += n;
       this.emit('points', { n, x, y, why });
     }
 
@@ -3055,7 +3085,11 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
 
     /* --------------------------------------------- final stats */
     stats() {
-      return { score: Math.floor(this.score), coins: this.coins, rare: this.rare, villages: this.villages, village: this.village, time: this.t };
+      const score = Math.floor(this.score), p = this.pts;
+      return {
+        score, coins: this.coins, rare: this.rare, villages: this.villages, village: this.village, time: this.t,
+        ride: score - p.lira - p.rare - p.bonus, liraPts: p.lira, rarePts: p.rare, bonusPts: p.bonus
+      };
     }
   }
 
@@ -3659,7 +3693,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
   /* ===================================================================== names
      The same lists the leaderboard server uses (src/names.json, inlined at build),
      so a rude name is refused here too, including in the on-device list. */
-  const NAME_LISTS = {"anywhere":["fuck","fck","phuck","fvck","shit","cunt","nigg","niga","faggot","fagot","bitch","biatch","whore","slut","pussy","pusy","asshole","ashole","arsehole","motherf","porn","penis","vagina","hitler","rapist","dildo","blowjob","cocksuck","dickhead","bastard","wanker","retard","jerkoff","jerkof","sharmou","sharmot","sharmut","charmou","charmot","charmut","shermou","manyak","manyok","manyouk","manyuk","mnayak","mnayek","mnayke","mnayik","metnek","mitnek","mtnek","mitnak","metnak","mutanak","kesemak","kesomak","kosomak","kosemak","kosemek","kosomok","kosomuk","kosumak","kusumak","kusomak","kesimak","kesemek","kesokht","kosokht","kesekht","kosekht","kosukht","kesukht","kusukht","ksmk","ksomk","kosomk","kesmk","shlekke","shleke","shlikke","shlike","شرموط","منيوك","منيك","متناك","كسخت","كسمك","كسام","قحبه","عرص","شلكه"],"starts":["ayre","ayri","ayro","ayru","ayrak","ayrek","ayrik","ayrb","ayrf","ayrk","3ayr","ahbe","a7be","2ahbe","2a7be","ka7b","kahbe","qahbe","nayek","nayik","3ars","3ers","shlek","shlik","sharmo","charmo"],"words":["ass","arse","dick","cock","rape","anal","cum","sex","kkk","tits","twat","wank","jizz","jiz","fag","spic","chink","nazi","nazis","ayr","kes","kos","kus","tiz","tez","teez","tizak","tizzak","tizi","tizo","zeb","zebb","zib","zob","zebe","zebbe","zebi","zbe","zbi","zobr","khra","khara","5ra","5ara","kharya","ars","ahba","louti","lou6i","lu6i","luti","neek","neekak","nekak","neekik","nikak","كس","كسك","كسي","زب","زبي","زبك","زبر","طيز","طيزك","طيزي","خرا","نيك","نيكك","اير","ايري","ايرك","ايره","ايرو","عير","عيري","عيرك","لوطي"]};
+  const NAME_LISTS = {"anywhere":["fuck","fck","phuck","fvck","shit","cunt","nigg","niga","faggot","fagot","bitch","biatch","whore","slut","pussy","pusy","asshole","ashole","arsehole","motherf","porn","penis","vagina","hitler","rapist","dildo","blowjob","cocksuck","dickhead","bastard","wanker","retard","jerkoff","jerkof","sharmou","sharmot","sharmut","charmou","charmot","charmut","shermou","manyak","manyok","manyouk","manyuk","mnayak","mnayek","mnayke","mnayik","metnek","mitnek","mtnek","mitnak","metnak","mutanak","kesemak","kesomak","kosomak","kosemak","kosemek","kosomok","kosomuk","kosumak","kusumak","kusomak","kesimak","kesemek","kesokht","kosokht","kesekht","kosekht","kosukht","kesukht","kusukht","ksmk","ksomk","kosomk","kesmk","shlekke","shleke","shlikke","shlike","شرموط","منيوك","منيك","متناك","كسخت","كسمك","كسام","قحبه","عرص","شلكه"],"starts":["ayre","ayri","ayro","ayru","ayrak","ayrek","ayrik","ayrb","ayrf","ayrk","3ayr","ahbe","a7be","2ahbe","2a7be","ka7b","kahbe","qahbe","nayek","nayik","3ars","3ers","shlek","shlik","sharmo","charmo"],"words":["ass","arse","dick","cock","rape","anal","cum","sex","kkk","tits","twat","wank","jizz","jiz","fag","spic","chink","nazi","nazis","ayr","kes","kos","kus","tiz","tez","teez","tizak","tizzak","tizi","tizo","zeb","zebb","zib","zob","zebe","zebbe","zebi","zbe","zbi","zobr","khra","khara","5ra","5ara","kharya","ars","ahba","louti","lou6i","lu6i","luti","neek","neekak","nekak","neekik","nikak","كس","كسك","كسي","زب","زبي","زبك","زبر","طيز","طيزك","طيزي","خرا","نيك","نيكك","اير","ايري","ايرك","ايره","ايرو","عير","عيري","عيرك","لوطي","kalb","kalbe","kelb","kleb","klab","hmar","7mar","hmara","7mara","hmare","7mare","hmir","7mir","jahsh","ja7sh","jahch","bhim","bheem","khanzir","5anzir","khanzeer","5anzeer","hayawan","7ayawan","hayawen","7ayawen","7aywan","haywan","ahbal","a7bal","habla","ghabi","wati","كلب","كلبه","كلاب","حمار","حماره","حمير","جحش","بهيم","خنزير","حيوان","اهبل","هبله","غبي","واطي"]};
   function makeNameCheck(L) {
     if (!L) return () => false;
     const dedup = s => s.replace(/(.)\1+/gu, '$1');
@@ -3715,8 +3749,9 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
       start: q('#jgStart'), paused: q('#jgPaused'), over: q('#jgOver'), hud: q('.jg-hud'), toast: q('#jgToast'),
       score: q('#jgScore'), coins: q('#jgCoins'), rare: q('#jgRare'), rareWrap: q('.jg-rare'), helmets: q('#jgHelmets'), powers: q('#jgPowers'),
       place: q('#jgVillage'), elev: q('#jgElev'), best: q('#jgBest'), play: q('#jgPlay'), resume: q('#jgResume'), again: q('#jgAgain'),
-      pause: q('#jgPause'), mute: q('#jgMute'), where: q('#jgOverWhere'), final: q('#jgFinal'), stats: q('#jgStats'),
+      pause: q('#jgPause'), mute: q('#jgMute'), where: q('#jgOverWhere'), final: q('#jgFinal'),
       form: q('#jgForm'), name: q('#jgName'), save: q('#jgSave'), msg: q('#jgMsg'), newBest: q('#jgNewBest'),
+      sum: q('#jgSum'), gain: q('#jgGain'), contact: q('#jgContact'),
       board: document.getElementById('jgBoard'), boardNote: document.getElementById('jgBoardNote')
     };
     const sound = makeSound();
@@ -4197,6 +4232,15 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
         }
       }
     }
+    let gainAcc = 0, gainTimer = 0;
+    function gain(n, rare) {
+      if (!ui.gain) return;
+      gainAcc += n;
+      ui.gain.textContent = '+' + gainAcc.toLocaleString('en-US');
+      ui.gain.className = 'jg-gain show' + (rare ? ' rare' : '');
+      clearTimeout(gainTimer);
+      gainTimer = setTimeout(() => { gainAcc = 0; if (ui.gain) ui.gain.className = 'jg-gain'; }, 900);
+    }
     let toastTimer = 0;
     function toast(main, sub, tone, ar) {
       if (!ui.toast) return;
@@ -4232,7 +4276,11 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
             if (live) { sound.play('bounce'); if (e.kind === 'goat' || e.kind === 'goats') sound.play('goat'); else if (e.kind !== 'snowman') sound.play('honk'); }
             burst(e.x, e.y, 8, ['#FFFAE6'], 120, 0.4, 2.4, 0);
             break;
-          case 'points': if (e.why === 'bounce') floatText('+' + e.n, e.x, e.y + 26, '#FFD88A'); else if (e.why === 'rare') floatText('+' + e.n, e.x, e.y + 22, '#E2B8F2'); break;
+          case 'points':
+            if (e.why === 'bounce') floatText('+' + e.n, e.x, e.y + 26, '#FFD88A');
+            else if (e.why === 'rare') floatText('+' + e.n, e.x, e.y + 22, '#E2B8F2');
+            if (state === 'play' && (e.why === 'coin' || e.why === 'rare')) gain(e.n, e.why === 'rare');
+            break;
           case 'helmetLost':
             sound.play('helmet'); shake = 0.7; flash = 0.5;
             floats.push({ helmet: true, x: sim.dist + 68, y: sim.p.y + 82, vx: -140, vy: 520, rot: 0, vr: -9, life: 1.4 });
@@ -4352,12 +4400,30 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
       const mins = Math.floor(st.time / 60), secs = Math.floor(st.time % 60);
       setText(ui.where, 'where', 'Hit ' + (what[sim.crashKind] || 'trouble') + ' in ' + st.village);
       setText(ui.final, 'final', fmt(st.score));
-      setText(ui.stats, 'stats', st.coins + ' lira · ' + st.rare + ' Phoenician · ' + st.villages + (st.villages === 1 ? ' village' : ' villages') + ' · ' + mins + ':' + String(secs).padStart(2, '0'));
+      if (ui.sum) {
+        ui.sum.textContent = '';
+        const chip = (cls, label, pts) => {
+          const s2 = document.createElement('span'); s2.className = cls;
+          s2.append(label + ' ');
+          const b = document.createElement('b'); b.textContent = pts; s2.appendChild(b);
+          ui.sum.appendChild(s2);
+        };
+        chip('ride', 'Ride', '+' + fmt(st.ride));
+        chip('lira', st.coins + ' lira', '+' + fmt(st.liraPts));
+        if (st.rare) chip('rare', st.rare + ' Phoenician', '+' + fmt(st.rarePts));
+        if (st.bonusPts) chip('bonus', 'Bonus', '+' + fmt(st.bonusPts));
+        chip('time', st.villages + (st.villages === 1 ? ' village in' : ' villages in'), mins + ':' + String(secs).padStart(2, '0'));
+      }
       if (ui.newBest) ui.newBest.hidden = !isBest || st.score < 100;
       if (ui.best) ui.best.textContent = 'Your best: ' + fmt(Math.max(best, st.score));
-      if (ui.form) { ui.form.hidden = st.score < 100 || st.time < 3.5; ui.msg.textContent = ''; ui.msg.className = 'jg-msg'; ui.save.disabled = false; ui.save.textContent = 'Save score'; }
+      if (ui.form) {
+        const canSave = st.score >= 100 && st.time >= 3.5;
+        ui.form.hidden = !canSave; ui.save.hidden = !canSave;
+        ui.msg.textContent = ''; ui.msg.className = 'jg-msg'; ui.save.disabled = false; ui.save.textContent = 'Save score';
+      }
       if (ui.name && !ui.name.value) { const saved = store.get('jkRush.name', ''); ui.name.value = saved && !rudeName(saved) ? saved : ''; }
       if (ui.name && rudeName(ui.name.value)) ui.name.value = '';
+      if (ui.contact && !ui.contact.value) ui.contact.value = store.get('jkRush.contact', '');
       show(ui.hud, false); show(ui.over, true);
       // don't let a held Space bar skip the results
       if (ui.again) { ui.again.disabled = true; setTimeout(() => { ui.again.disabled = false; }, 700); }
@@ -4432,10 +4498,14 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
       ev.preventDefault();
       if (savedThisRun) return;
       const name = ui.name.value.replace(/\s+/g, ' ').trim();
-      const bad = validName(name) || (rudeName(name) ? 'Please pick a different name.' : '');
+      const contact = ui.contact ? ui.contact.value.replace(/\s+/g, ' ').trim().slice(0, 40) : '';
+      const badContact = contact && (!/^[\p{L}\p{N} +@._()\/-]+$/u.test(contact) || (contact.match(/[\p{L}\p{N}]/gu) || []).length < 3)
+        ? 'For the contact, use a phone number, an Instagram handle or an email.' : '';
+      const bad = validName(name) || (rudeName(name) ? 'Please pick a different name.' : '') || badContact;
       ui.msg.className = 'jg-msg';
       if (bad) { ui.msg.textContent = bad; ui.msg.className = 'jg-msg err'; ui.name.focus(); return; }
       store.set('jkRush.name', name);
+      if (contact) store.set('jkRush.contact', contact);
       const st = sim.stats();
       // fix the local copy's name too
       const local = store.get('jkRush.local', []);
@@ -4448,7 +4518,7 @@ section { scroll-margin-top: calc(var(--head) + 8px); }
       ui.save.disabled = true; ui.msg.textContent = 'Saving…';
       const played = Math.min(st.time, sim.t - tokenAt + 2);
       try {
-        const d = await api('?a=submit&_=' + Date.now(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ name, score: st.score, coins: st.coins, rare: st.rare, villages: st.villages, village: st.village, time: Math.round(played * 10) / 10, token }) });
+        const d = await api('?a=submit&_=' + Date.now(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ name, contact, score: st.score, coins: st.coins, rare: st.rare, villages: st.villages, village: st.village, time: Math.round(played * 10) / 10, token }) });
         if (d && d.ok) {
           savedThisRun = true;
           online = true;
