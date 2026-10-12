@@ -284,128 +284,13 @@
     update();
   }
 
-  /* ------------------------------------------------------------ Jeetak: ride through the Upper Metn */
-  function ride() {
-    const cv = $('#rideCanvas');
-    if (!cv) return;
-    const band = $('#jkRide');
-    const ctx = cv.getContext('2d');
-    const V = JSON.parse(cv.dataset.villages || '[]');
-    const C = {
-      skyTop: '#0c1d15', skyBot: '#1D3D2F', far: '#335E4A', mid: '#284E3D', near: '#183428',
-      treeFar: '#2A5040', treeMid: '#1E4234', treeNear: '#0F271C', road: '#0E2118', edge: '#21402f',
-      stone: '#EFE3C4', glow: '#FFD88A', cream: '#FFFAE6', pine: '#1D3D2F', ink: '#15271E'
-    };
-    let W = 0, H = 0, dist = 0, speed = 80, wheel = '';
-    const stars = [];
-    const R = rng(77);
-    for (let i = 0; i < 40; i++) stars.push([R(), R() * 0.45, 0.4 + R() * 1.1]);
-
-    const ry = (x, s, base, amp, f) => base - amp * (0.55 * Math.sin(x * f + s) + 0.3 * Math.sin(x * f * 2.3 + s * 1.7) + 0.15 * Math.sin(x * f * 5.1 + s * 3.1));
-    function pine(x, y, s) {
-      ctx.beginPath();
-      ctx.moveTo(x, y - s);
-      ctx.lineTo(x + s * 0.24, y - s * 0.56); ctx.lineTo(x + s * 0.13, y - s * 0.56);
-      ctx.lineTo(x + s * 0.38, y - s * 0.14); ctx.lineTo(x - s * 0.38, y - s * 0.14);
-      ctx.lineTo(x - s * 0.13, y - s * 0.56); ctx.lineTo(x - s * 0.24, y - s * 0.56);
-      ctx.closePath(); ctx.fill();
-      ctx.fillRect(x - s * 0.035, y - s * 0.15, s * 0.07, s * 0.15);
-    }
-    function layer(off, seed, base, amp, f, col, treeCol, gap, size) {
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.moveTo(0, H);
-      for (let x = 0; x <= W + 6; x += 6) ctx.lineTo(x, ry(x + off, seed, base, amp, f));
-      ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
-      if (!treeCol) return;
-      ctx.fillStyle = treeCol;
-      const i0 = Math.floor(off / gap) - 1;
-      for (let i = i0; i * gap - off < W + gap; i++) {
-        const r = hash(i * 7.31 + seed);
-        if (r < 0.3) continue;
-        const x = i * gap - off + (r - 0.5) * gap * 0.8;
-        pine(x, ry(x + off, seed, base, amp, f) + size * 0.18, size * (0.65 + hash(i + seed * 3.3) * 0.6));
-      }
-    }
-    function sign(x, roadY, v) {
-      const en = v[0], ar = v[1];
-      const fsE = clamp(H * 0.075, 12, 18), fsA = fsE * 1.05;
-      ctx.font = 'italic 600 ' + fsE + 'px "Kanit", "Instrument Sans", sans-serif';
-      const wE = ctx.measureText(en).width;
-      ctx.font = '600 ' + fsA + 'px "Baloo Bhaijaan 2", "Geeza Pro", sans-serif';
-      const wA = ctx.measureText(ar).width;
-      const bw = Math.max(wE, wA) + fsE * 1.6, bh = fsE * 3.1;
-      const postH = H * 0.2;
-      const top = roadY - postH - bh;
-      ctx.fillStyle = C.stone; ctx.fillRect(x - 2, roadY - postH - 2, 4, postH + 4);
-      ctx.fillStyle = C.cream; rrect(ctx, x - bw / 2, top, bw, bh, 5); ctx.fill();
-      ctx.strokeStyle = C.pine; ctx.lineWidth = 1.5; rrect(ctx, x - bw / 2 + 3, top + 3, bw - 6, bh - 6, 3); ctx.stroke();
-      ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = 'italic 600 ' + fsE + 'px "Kanit", "Instrument Sans", sans-serif';
-      ctx.fillText(en, x, top + bh * 0.34);
-      ctx.font = '600 ' + fsA + 'px "Baloo Bhaijaan 2", "Geeza Pro", sans-serif';
-      ctx.fillText(ar, x, top + bh * 0.7);
-      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    }
-    function draw(t, dt) {
-      if (!W) return;
-      speed = 80 + scrollKick * 0.9;
-      scrollKick *= Math.exp(-dt * 2.2);
-      dist += speed * dt;
-      const wv = clamp(36 / speed, 0.12, 0.6).toFixed(1) + 's';
-      if (wv !== wheel) { wheel = wv; band.style.setProperty('--wheel', wv); }
-      const sky = ctx.createLinearGradient(0, 0, 0, H);
-      sky.addColorStop(0, C.skyTop); sky.addColorStop(1, C.skyBot);
-      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = C.cream;
-      for (const s of stars) { ctx.globalAlpha = 0.25 + 0.2 * Math.sin(t * s[2] + s[0] * 10); ctx.fillRect(((s[0] * W * 1.3 - dist * 0.01) % W + W) % W, s[1] * H, 1.5, 1.5); }
-      ctx.globalAlpha = 1;
-      const mx = W * 0.8, my = H * 0.27, mr = Math.max(10, H * 0.07);
-      const halo = ctx.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 4);
-      halo.addColorStop(0, 'rgba(255,216,138,.32)'); halo.addColorStop(1, 'rgba(255,216,138,0)');
-      ctx.fillStyle = halo; ctx.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
-      dot(ctx, mx, my, mr, C.glow);
-      const roadY = H * 0.78;
-      layer(dist * 0.05, 1.3, H * 0.5, H * 0.12, 0.0042, C.far, null, 0, 0);
-      layer(dist * 0.12, 4.1, H * 0.6, H * 0.09, 0.0062, C.mid, C.treeFar, 18, H * 0.1);
-      layer(dist * 0.3, 2.7, H * 0.7, H * 0.06, 0.009, C.near, C.treeMid, 30, H * 0.16);
-      // trees along the far side of the road
-      ctx.fillStyle = C.treeNear;
-      const off = dist * 0.62, gap = 46;
-      for (let i = Math.floor(off / gap) - 1; i * gap - off < W + gap; i++) {
-        const r = hash(i * 3.17 + 9);
-        if (r < 0.45) continue;
-        pine(i * gap - off + (r - 0.5) * 30, roadY + 2, H * (0.18 + hash(i * 1.7) * 0.12));
-      }
-      // signposts with the real village names
-      const sg = Math.max(W * 0.55, 340);
-      for (let k = Math.floor(dist / sg) - 1; k * sg - dist < W + sg; k++) {
-        const x = k * sg - dist + sg * 0.5;
-        if (x < -200 || x > W + 200 || !V.length) continue;
-        sign(x, roadY + 3, V[((k % V.length) + V.length) % V.length]);
-      }
-      // road
-      ctx.fillStyle = C.road; ctx.fillRect(0, roadY, W, H - roadY);
-      ctx.fillStyle = C.edge; ctx.fillRect(0, roadY, W, 2);
-      ctx.fillStyle = C.stone; ctx.globalAlpha = 0.55;
-      const dash = 26, dgap = 24, ly = roadY + (H - roadY) * 0.55;
-      for (let x = -((dist % (dash + dgap))); x < W; x += dash + dgap) ctx.fillRect(x, ly, dash, 2.5);
-      ctx.globalAlpha = 1;
-    }
-    function resize() { const s = fit(cv, ctx, 1.5); W = s.w; H = s.h; draw(0, 0); }
-    resize();
-    if ('ResizeObserver' in window) new ResizeObserver(debounce(resize, 120)).observe(cv);
-    redrawOnFonts.push(() => draw(0, 0));
-    if (!REDUCE) tasks.push({ el: cv, tick: draw });
-    watch(cv);
-  }
-
   /* ------------------------------------------------------------ Jeetak: order tracker in the phone */
   function tracker() {
     const list = $('#jkSteps');
     if (!list) return;
     const items = $$('li', list);
     const route = $('#jkRoute'), done = $('#jkRouteDone'), shop = $('#jkShop'), home = $('#jkHome'), rider = $('#jkRider'), label = $('#jkMapLabel');
-    const rc = $('#rideCanvas');
+    const rc = $('#jkGame');
     const V = JSON.parse((rc && rc.dataset.villages) || '[]');
     const byName = n => V.find(v => v[0] === n);
     const pairs = [['Hammana', 'Falougha'], ['Bhamdoun', 'Ras El Maten'], ['Khalwet', 'Qortada'], ['Saoufar', 'Bzebdine'], ['Salima', 'Arsoun'], ['Kfar Selouan', 'Btekhnay']]
@@ -1467,7 +1352,6 @@
   /* ------------------------------------------------------------ start */
   hero();
   scrollFx();
-  ride();
   tracker();
   scenes();
   counters();

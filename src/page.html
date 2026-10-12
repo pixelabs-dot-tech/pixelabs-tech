@@ -105,13 +105,90 @@
         <li><strong>2</strong><span>languages, English and Arabic</span></li>
       </ul>
 
-      <div class="jk-ride" id="jkRide" aria-hidden="true">
-        <canvas id="rideCanvas" data-villages="{{VILLAGES_JSON}}"></canvas>
-        <div class="jk-scooter">
-          <svg viewBox="-46 14 208 100" focusable="false">
+      <div class="jk-game" id="jkGame" tabindex="-1" role="region" aria-label="Jeetak Rush, a scooter game" aria-describedby="jgHow"
+           data-villages="{{VILLAGES_JSON}}" data-api="{{GAME_API}}">
+        <canvas class="jg-world" aria-hidden="true"></canvas>
+        <div class="jg-scooter" aria-hidden="true">
+          <svg viewBox="-46 -16 208 130" focusable="false">
             <g class="speeds"><path class="speed" d="M-28 46 H-6"/><path class="speed sp2" d="M-42 64 H-10"/><path class="speed sp3" d="M-26 82 H-4"/></g>
             {{SCOOTER}}
           </svg>
+        </div>
+        <canvas class="jg-fx" aria-hidden="true"></canvas>
+
+        <div class="jg-hud" hidden>
+          <div class="jg-hud-l">
+            <p class="jg-score" id="jgScore">0</p>
+            <p class="jg-loot"><span class="jg-coin" aria-hidden="true"></span><b id="jgCoins">0</b><span class="jg-rare" hidden><span class="jg-pcoin" aria-hidden="true"></span><b id="jgRare">0</b></span></p>
+            <p class="jg-place"><b id="jgVillage"></b><span id="jgElev"></span></p>
+          </div>
+          <div class="jg-hud-r">
+            <div class="jg-powers" id="jgPowers"><span data-p="turbo" hidden>Turbo</span><span data-p="magnet" hidden>Magnet</span><span data-p="double" hidden>Lira ×2</span></div>
+            <div class="jg-helmets" id="jgHelmets" role="img" aria-label="1 helmet">{{HELMET_ICON}}{{HELMET_ICON}}{{HELMET_ICON}}</div>
+            <button class="jg-ibtn" id="jgPause" type="button" aria-label="Pause"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3.5" y="3" width="3" height="10" rx="1"/><rect x="9.5" y="3" width="3" height="10" rx="1"/></svg></button>
+            <button class="jg-ibtn" id="jgMute" type="button" aria-label="Turn sound off" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path class="spk" d="M2 6h2.6L8 3v10L4.6 10H2z"/><path class="wave" d="M10.4 5.6a3.4 3.4 0 0 1 0 4.8M12.3 3.8a6 6 0 0 1 0 8.4"/><path class="cross" d="M10.5 6l4 4M14.5 6l-4 4"/></svg></button>
+          </div>
+        </div>
+        <div class="jg-toast" id="jgToast" aria-live="polite"></div>
+
+        <div class="jg-panel jg-start" id="jgStart">
+          <div class="jg-card">
+            <p class="jg-kicker">Mini game</p>
+            <h3 class="jg-title">Jeetak Rush</h3>
+            <p class="jg-sub">Ride through the 24 villages Jeetak delivers to. Jump the potholes, dodge oncoming traffic and grab the lira.</p>
+            <p class="jg-keys"><span><kbd>Tap</kbd> <kbd>Click</kbd> or <kbd>Space</kbd> to jump</span><span>Jump again in mid-air for a double jump</span></p>
+            <div class="jg-actions"><button class="btn jk-btn" id="jgPlay" type="button">Play</button><a class="jg-link" href="#jgBoardWrap">Leaderboard</a></div>
+            <p class="jg-best" id="jgBest"></p>
+          </div>
+        </div>
+
+        <div class="jg-panel jg-paused" id="jgPaused" hidden>
+          <div class="jg-card">
+            <h3 class="jg-title">Paused</h3>
+            <div class="jg-actions"><button class="btn jk-btn" id="jgResume" type="button">Resume</button></div>
+            <p class="jg-sub">Press P or Esc to pause, Space to carry on.</p>
+          </div>
+        </div>
+
+        <div class="jg-panel jg-over" id="jgOver" tabindex="-1" hidden>
+          <div class="jg-card">
+            <p class="jg-kicker" id="jgOverWhere"></p>
+            <p class="jg-final"><span id="jgFinal">0</span><span class="jg-newbest" id="jgNewBest" hidden>New best</span></p>
+            <p class="jg-stats" id="jgStats"></p>
+            <form class="jg-form" id="jgForm" novalidate>
+              <label for="jgName">Your name on the leaderboard</label>
+              <div class="jg-row">
+                <input id="jgName" name="name" type="text" maxlength="16" autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="send" placeholder="Your name">
+                <button class="btn jg-save" id="jgSave" type="submit">Save score</button>
+              </div>
+              <p class="jg-msg" id="jgMsg" role="status"></p>
+            </form>
+            <div class="jg-actions"><button class="btn jk-btn" id="jgAgain" type="button">Play again</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap jg-below" id="jgBoardWrap">
+        <div class="jg-how" id="jgHow">
+          <h3>How to play</h3>
+          <ul class="jg-legend">
+            <li><canvas data-jg-icon="lira" aria-hidden="true"></canvas><span><b>Lira coin, +10</b>The old Lebanese lira, cedar and all.</span></li>
+            <li><canvas data-jg-icon="rare" aria-hidden="true"></canvas><span><b>Phoenician coin, +150</b>Rare, and usually high up. Double jump for it.</span></li>
+            <li><canvas data-jg-icon="helmet" aria-hidden="true"></canvas><span><b>Helmet</b>An extra life. You start with one and can carry three.</span></li>
+            <li><canvas data-jg-icon="turbo" aria-hidden="true"></canvas><span><b>Turbo</b>Clears the road and speeds you up for a few seconds.</span></li>
+            <li><canvas data-jg-icon="magnet" aria-hidden="true"></canvas><span><b>Magnet</b>Pulls nearby coins to you.</span></li>
+            <li><canvas data-jg-icon="double" aria-hidden="true"></canvas><span><b>Lira ×2</b>Every coin counts twice.</span></li>
+            <li><canvas data-jg-icon="hole" aria-hidden="true"></canvas><span><b>Potholes and open manholes</b>Jump them. They get wider as you speed up.</span></li>
+            <li><canvas data-jg-icon="goat" aria-hidden="true"></canvas><span><b>Goats</b>Jump over them, or land on their back for a bounce.</span></li>
+            <li><canvas data-jg-icon="car" aria-hidden="true"></canvas><span><b>Oncoming traffic</b>A warning flashes before a car comes round the bend. Land on its roof to bounce.</span></li>
+          </ul>
+          <p class="jg-note">Every village is about 15 seconds of riding, and the scenery follows its real elevation: snow above about 1,100 m, pine forest in the middle, and a view of the sea from the low villages.</p>
+        </div>
+        <div class="jg-lb">
+          <h3>Leaderboard</h3>
+          <p class="jg-board-head" aria-hidden="true"><span>#</span><span>Rider</span><span>Reached</span><span>Score</span></p>
+          <ol class="jg-board" id="jgBoard"><li class="empty">Loading…</li></ol>
+          <p class="jg-note" id="jgBoardNote"></p>
         </div>
       </div>
     </div>

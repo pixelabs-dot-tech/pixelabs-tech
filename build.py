@@ -46,6 +46,30 @@ def balanced(s, start, tag):
     raise ValueError("unbalanced " + tag)
 
 
+RIDER = ('<g class="rider">'
+         '<path class="r-leg-far" d="M68 47 L99 44 L103 79"/>'
+         '<path class="r-torso" d="M57 52 C55 37 64 21 79 12 C86 8 95 11 97 18 C99 29 90 41 86 53 Z"/>'
+         '<path class="r-stripe" d="M60 44 C62 33 70 22 81 15"/>'
+         '<path class="r-leg" d="M66 50 L103 48 L108 81"/>'
+         '<path class="r-shoe" d="M102 78 h12 a4 4 0 0 1 0 7 h-12 z"/>'
+         '<path class="r-arm" d="M91 18 L113 30 L135 28"/>'
+         '<circle class="r-skin" cx="137" cy="28.5" r="3.8"/>'
+         '<circle class="r-skin" cx="100" cy="1" r="9"/>'
+         '<path class="r-skin" d="M93 8 L99 9 L96 15 Z"/>'
+         '<circle class="r-eye" cx="104.6" cy="0" r="1.3"/>'
+         '<path class="r-hair" d="M91 3 C90 -7 97 -11 104 -9 C108 -8 110 -5 109 -2 C104 -5 97 -4 93 4 Z"/>'
+         '<g class="r-helmet">'
+         '<path class="r-helmet-shell" d="M88.5 6 C87 -7 96 -13 105 -11 C112 -9 114.5 -2 113 6 Z"/>'
+         '<path class="r-helmet-band" d="M90 -3 C94 -10 103 -12 109 -8 L108 -5 C102 -9 95 -7 91 0 Z"/>'
+         '<path class="r-visor" d="M104 -1 L114 0.5 L112.5 6 L103 5 Z"/>'
+         '</g></g>')
+HELMET_ICON = ('<i><svg viewBox="-1 -1 28 20" focusable="false">'
+               '<path class="h-shell" d="M1 15 C0 3 9 -1 15 0 C22 1 26 7 25 15 Z"/>'
+               '<path class="h-band" d="M3 8 C5 3 11 1 16 2 L15.5 4.5 C11 3.6 7 5.4 5.4 9 Z"/>'
+               '<path class="h-visor" d="M15 7 L26 8 L25.4 15 L14 14.4 Z"/></svg></i>')
+GAME_API = "https://mistyrose-turtle-660701.hostingersite.com/api/index.php"
+
+
 def jeetak_assets():
     s = JEETAK.read_text(encoding="utf-8")
     out = {}
@@ -57,6 +81,8 @@ def jeetak_assets():
     i = s.find('<g class="intro-scoot">')
     scoot = balanced(s, i, "g")
     scoot = scoot.replace('class="intro-scoot"', 'class="scoot-body-g"')
+    # a rider between the bag and the scooter body, so a helmet (an extra life) has somewhere to go
+    scoot = scoot.replace('<path class="scoot-body" d="M14 88', RIDER + '<path class="scoot-body" d="M14 88', 1)
     out["scooter"] = scoot
     # food illustrations
     t0 = s.find('<template id="footFood">')
@@ -240,7 +266,7 @@ def build():
     jk = jeetak_assets()
     page = (SRC / "page.html").read_text(encoding="utf-8")
     css = (SRC / "style.css").read_text(encoding="utf-8")
-    js = (SRC / "main.js").read_text(encoding="utf-8")
+    js = (SRC / "main.js").read_text(encoding="utf-8") + "\n" + (SRC / "game.js").read_text(encoding="utf-8")
 
     wa_qr = qr_matrix("https://wa.me/%s" % PHONE_WA, qrcode.constants.ERROR_CORRECT_M)
     px_qr = qr_matrix("https://pixelabs.tech", qrcode.constants.ERROR_CORRECT_H)
@@ -261,6 +287,8 @@ def build():
         "{{FOOD_WATERMELON}}": jk["food"]["watermelon"],
         "{{FOOD_GROCERIES}}": jk["food"].get("groceries", ""),
         "{{VILLAGES_JSON}}": vill_json,
+        "{{HELMET_ICON}}": HELMET_ICON,
+        "{{GAME_API}}": GAME_API,
         "{{VILLAGE_DOTS}}": map_dots,
         "{{QR_N}}": str(n),
         "{{QR_N4}}": str(n + 8),
