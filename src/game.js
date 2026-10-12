@@ -1120,6 +1120,44 @@
     };
   }
 
+  /* ===================================================================== names
+     The same lists the leaderboard server uses (src/names.json, inlined at build),
+     so a rude name is refused here too, including in the on-device list. */
+  const NAME_LISTS = /*@@NAMES@@*/ null;
+  function makeNameCheck(L) {
+    if (!L) return () => false;
+    const dedup = s => s.replace(/(.)\1+/gu, '$1');
+    const single = w => dedup(w) === w;
+    const any = L.anywhere, anyD = any.filter(single), start = L.starts, startD = start.filter(single);
+    const word = new Set(L.words), wordD = new Set(L.words.filter(single));
+    const AR = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا', 'ة': 'ه', 'ى': 'ي', 'ؤ': 'و', 'ئ': 'ي' };
+    const LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', 8: 'b', 9: 'g', '@': 'a', $: 's', '!': 'i', '|': 'i', '€': 'e', '+': 't' };
+    const fold = s => String(s).normalize('NFKD').toLowerCase()
+      .replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640\u200b-\u200f]/g, '')
+      .replace(/[أإآٱةىؤئ]/g, c => AR[c]);
+    return function rude(name) {
+      const raw = fold(name);
+      const leet = raw.replace(/[01345789@$!|€+]/g, c => LEET[c]);
+      for (const v of [raw, leet]) {
+        const squash = v.replace(/[^\p{L}\p{N}]+/gu, '');
+        if (!squash) continue;
+        const squashD = dedup(squash);
+        if (any.some(w => squash.includes(w)) || anyD.some(w => squashD.includes(w))) return true;
+        const tokens = v.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+        tokens.push(squash);
+        for (const t of tokens) {
+          for (const [x, wl, sl] of [[t, word, start], [dedup(t), wordD, startD]]) {
+            const bare = x.replace(/\d+$/u, '');
+            if (wl.has(x) || (bare && wl.has(bare))) return true;
+            if (sl.some(w => x.startsWith(w))) return true;
+          }
+        }
+      }
+      return false;
+    };
+  }
+  const rudeName = makeNameCheck(NAME_LISTS);
+
   /* ===================================================================== storage that never throws */
   const store = {
     get(k, d) { try { const v = window.localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -1782,7 +1820,8 @@
       if (ui.newBest) ui.newBest.hidden = !isBest || st.score < 100;
       if (ui.best) ui.best.textContent = 'Your best: ' + fmt(Math.max(best, st.score));
       if (ui.form) { ui.form.hidden = st.score < 100 || st.time < 3.5; ui.msg.textContent = ''; ui.msg.className = 'jg-msg'; ui.save.disabled = false; ui.save.textContent = 'Save score'; }
-      if (ui.name && !ui.name.value) ui.name.value = store.get('jkRush.name', '');
+      if (ui.name && !ui.name.value) { const saved = store.get('jkRush.name', ''); ui.name.value = saved && !rudeName(saved) ? saved : ''; }
+      if (ui.name && rudeName(ui.name.value)) ui.name.value = '';
       show(ui.hud, false); show(ui.over, true);
       // don't let a held Space bar skip the results
       if (ui.again) { ui.again.disabled = true; setTimeout(() => { ui.again.disabled = false; }, 700); }
@@ -1810,7 +1849,8 @@
     function saveLocal(st) {
       if (st.score < 100) return;
       const list = store.get('jkRush.local', []);
-      list.push({ n: store.get('jkRush.name', '') || 'You', s: st.score, v: st.village, t: Date.now() / 1000 | 0, me: true });
+      const saved = store.get('jkRush.name', '');
+      list.push({ n: saved && !rudeName(saved) ? saved : 'You', s: st.score, v: st.village, t: Date.now() / 1000 | 0, me: true });
       list.sort((a, b) => b.s - a.s);
       store.set('jkRush.local', list.slice(0, 10));
       if (online === false) renderBoard(store.get('jkRush.local', []), 'local');
@@ -1827,7 +1867,7 @@
         const li = document.createElement('li');
         if (mineKey && keyOf(r.n) === mineKey) li.className = 'me';
         const a = document.createElement('span'); a.className = 'r'; a.textContent = String(i + 1);
-        const b = document.createElement('span'); b.className = 'n'; b.textContent = r.n;
+        const b = document.createElement('span'); b.className = 'n'; b.textContent = rudeName(r.n) ? 'Rider' : r.n;
         const c = document.createElement('span'); c.className = 'v'; c.textContent = r.v || '';
         const d2 = document.createElement('span'); d2.className = 's'; d2.textContent = fmt(r.s);
         li.append(a, b, c, d2);
@@ -1856,7 +1896,7 @@
       ev.preventDefault();
       if (savedThisRun) return;
       const name = ui.name.value.replace(/\s+/g, ' ').trim();
-      const bad = validName(name);
+      const bad = validName(name) || (rudeName(name) ? 'Please pick a different name.' : '');
       ui.msg.className = 'jg-msg';
       if (bad) { ui.msg.textContent = bad; ui.msg.className = 'jg-msg err'; ui.name.focus(); return; }
       store.set('jkRush.name', name);
@@ -1978,7 +2018,7 @@
 
   return {
     Sim, autopilot, ROUTE, ELEV, envFor, AIR, PH, FRONT, WHEEL, BODY, KINDS, POWERS, POWER_TIME, SEG,
-    mount
+    makeNameCheck, mount
   };
 
 });

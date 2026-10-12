@@ -266,7 +266,12 @@ def build():
     jk = jeetak_assets()
     page = (SRC / "page.html").read_text(encoding="utf-8")
     css = (SRC / "style.css").read_text(encoding="utf-8")
-    js = (SRC / "main.js").read_text(encoding="utf-8") + "\n" + (SRC / "game.js").read_text(encoding="utf-8")
+    names = json.loads((SRC / "names.json").read_text(encoding="utf-8"))
+    game = (SRC / "game.js").read_text(encoding="utf-8")
+    if "/*@@NAMES@@*/ null" not in game:
+        raise SystemExit("game.js: name list placeholder missing")
+    game = game.replace("/*@@NAMES@@*/ null", json.dumps(names, ensure_ascii=False, separators=(",", ":")))
+    js = (SRC / "main.js").read_text(encoding="utf-8") + "\n" + game
 
     wa_qr = qr_matrix("https://wa.me/%s" % PHONE_WA, qrcode.constants.ERROR_CORRECT_M)
     px_qr = qr_matrix("https://pixelabs.tech", qrcode.constants.ERROR_CORRECT_H)
